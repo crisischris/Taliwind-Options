@@ -15,12 +15,10 @@ class Alert:
 
 
 def _notify_mac(alert: Alert) -> None:
-    script = (
-        f'display notification "{alert.message}" '
-        f'with title "{alert.title}"'
-        + (f' subtitle "{alert.subtitle}"' if alert.subtitle else "")
-    )
-    subprocess.run(["osascript", "-e", script], check=True)
+    cmd = ["terminal-notifier", "-title", alert.title, "-message", alert.message]
+    if alert.subtitle:
+        cmd += ["-subtitle", alert.subtitle]
+    subprocess.run(cmd, check=True)
 
 
 def _notify_sms(alert: Alert) -> None:

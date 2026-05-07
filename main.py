@@ -2,7 +2,7 @@ import logging
 
 from indicators.config import config
 from indicators.notifier import Alert, send_alert
-from indicators.scheduler import register, start
+from indicators.scheduler import is_market_open, register, start
 from indicators.sources import PriceAlert, PriceThreshold
 
 logging.basicConfig(
@@ -44,8 +44,9 @@ def run_checks() -> None:
 if __name__ == "__main__":
     logger.info("Starting indicators — interval: %d min", config.check_interval_minutes)
 
-    # Run once immediately on start, then on the interval
-    run_checks()
+    # Run once immediately on start if market is open, then on the interval
+    if is_market_open():
+        run_checks()
 
     register(run_checks)
     start()
