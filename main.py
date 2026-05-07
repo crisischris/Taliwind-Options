@@ -2,6 +2,7 @@ import logging
 
 from indicators.config import config
 from indicators.notifier import Alert, send_alert
+from indicators.report import generate_and_open
 from indicators.scheduler import is_market_open, register, register_daily, start
 from indicators.sources import PriceAlert, PriceThreshold
 from indicators.sources.gainer_puts import GainerPutScanner
@@ -45,13 +46,27 @@ def run_checks() -> None:
 def run_daily_checks() -> None:
     logger.info("Running daily gainer put scan")
 
-    for signal in put_scanner.check():
-        if signal.triggered:
-            send_alert(Alert(
-                title=signal.title,
-                message=signal.message,
-                subtitle=signal.subtitle,
-            ))
+    signals = [s for s in put_scanner.check() if s.triggered]
+    if not signals:
+        logger.info("No qualifying puts found")
+        return
+
+    # Group by ticker
+    by_ticker: dict[str, list] = {}
+    for s in signals:
+        by_ticker.setdefault(s.data["ticker"], []).append(s)
+
+    ticker_lines = [
+        f"{ticker} (+{puts[0].data['gain_pct']:.0f}%) — {len(puts)} put{'s' if len(puts) > 1 else ''}"
+        for ticker, puts in by_ticker.items()
+    ]
+
+    send_alert(Alert(
+        title=f"Put Scanner: {len(signals)} opportunit{'ies' if len(signals) > 1 else 'y'} across {len(by_ticker)} ticker{'s' if len(by_ticker) > 1 else ''}",
+        message=", ".join(ticker_lines),
+        subtitle="Gainer Put Scan",
+    ))
+    generate_and_open(signals)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

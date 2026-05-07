@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import logging
-
 from io import StringIO
 
 import httpx
 import pandas as pd
 
+from . import cache
+
 logger = logging.getLogger(__name__)
 
-_cache: list[str] | None = None
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; indicators-bot/1.0)"}
 
 
@@ -20,9 +20,10 @@ def _read_html(url: str) -> list:
 
 
 def get_universe() -> list[str]:
-    global _cache
-    if _cache is not None:
-        return _cache
+    cached = cache.get("universe")
+    if cached is not None:
+        logger.info("Universe: %d tickers (cached)", len(cached))
+        return cached
 
     tickers: list[str] = []
 
@@ -41,7 +42,7 @@ def get_universe() -> list[str]:
     except Exception as e:
         logger.error("Failed to fetch NASDAQ 100 universe: %s", e)
 
-    # Deduplicate preserving order
-    _cache = list(dict.fromkeys(tickers))
-    logger.info("Universe: %d unique tickers total", len(_cache))
-    return _cache
+    result = list(dict.fromkeys(tickers))
+    cache.set("universe", result)
+    logger.info("Universe: %d unique tickers total", len(result))
+    return result

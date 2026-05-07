@@ -6,6 +6,7 @@ from datetime import date, timedelta
 
 import yfinance as yf
 
+from .. import cache
 from ..config import config
 from ..universe import get_universe
 from .base import Indicator, Signal
@@ -34,30 +35,36 @@ class GainerPutScanner(Indicator):
 
         for ticker, gain_pct in gainers:
             try:
-                current_price = yf.Ticker(ticker).fast_info.last_price
+                current_price = self._fetch_price(ticker)
                 if not current_price:
                     continue
-                signals.extend(self._scan_puts(ticker, gain_pct, float(current_price)))
+                signals.extend(self._scan_puts(ticker, gain_pct, current_price))
             except Exception as e:
                 logger.error("Error scanning puts for %s: %s", ticker, e)
 
         return signals
 
     def _find_gainers(self) -> list[tuple[str, float]]:
-        logger.info("Fetching 1-year history for %d tickers...", len(self.universe))
-        try:
-            data = yf.download(
-                self.universe,
-                period="1y",
-                auto_adjust=True,
-                progress=False,
-                threads=True,
-            )
-        except Exception as e:
-            logger.error("Bulk history download failed: %s", e)
-            return []
+        cached = cache.get("history_1y")
+        if cached is not None:
+            logger.info("Using cached 1-year history")
+            closes = cached
+        else:
+            logger.info("Fetching 1-year history for %d tickers...", len(self.universe))
+            try:
+                data = yf.download(
+                    self.universe,
+                    period="1y",
+                    auto_adjust=True,
+                    progress=False,
+                    threads=True,
+                )
+            except Exception as e:
+                logger.error("Bulk history download failed: %s", e)
+                return []
 
-        closes = data["Close"] if "Close" in data.columns else data.xs("Close", axis=1, level=0)
+            closes = data["Close"] if "Close" in data.columns else data.xs("Close", axis=1, level=0)
+            cache.set("history_1y", closes)
 
         gainers: list[tuple[str, float]] = []
         threshold = config.gainer_min_gain_pct / 100.0
@@ -76,28 +83,48 @@ class GainerPutScanner(Indicator):
 
         return sorted(gainers, key=lambda x: x[1], reverse=True)
 
+    def _fetch_price(self, ticker: str) -> float | None:
+        key = f"price_{ticker}"
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+        price = yf.Ticker(ticker).fast_info.last_price
+        if price:
+            cache.set(key, float(price))
+        return float(price) if price else None
+
     def _scan_puts(self, ticker: str, gain_pct: float, current_price: float) -> list[Signal]:
         signals: list[Signal] = []
         today = date.today()
         min_exp = today + timedelta(days=config.gainer_put_min_dte)
         max_exp = today + timedelta(days=config.gainer_put_max_dte)
 
-        t = yf.Ticker(ticker)
-        expirations = [
-            exp for exp in t.options
-            if min_exp <= date.fromisoformat(exp) <= max_exp
-        ]
+        exp_key = f"expirations_{ticker}"
+        expirations = cache.get(exp_key)
+        if expirations is None:
+            t = yf.Ticker(ticker)
+            expirations = [
+                exp for exp in t.options
+                if min_exp <= date.fromisoformat(exp) <= max_exp
+            ]
+            cache.set(exp_key, expirations)
+        else:
+            t = yf.Ticker(ticker)
 
         if not expirations:
             logger.debug("%s: no expirations in %d–%d DTE window", ticker, config.gainer_put_min_dte, config.gainer_put_max_dte)
             return signals
 
         for expiry in expirations:
-            try:
-                puts = t.option_chain(expiry).puts
-            except Exception as e:
-                logger.error("%s: failed to fetch options for %s: %s", ticker, expiry, e)
-                continue
+            chain_key = f"puts_{ticker}_{expiry}"
+            puts = cache.get(chain_key)
+            if puts is None:
+                try:
+                    puts = t.option_chain(expiry).puts
+                    cache.set(chain_key, puts)
+                except Exception as e:
+                    logger.error("%s: failed to fetch options for %s: %s", ticker, expiry, e)
+                    continue
 
             mask = (
                 (~puts["inTheMoney"]) &
