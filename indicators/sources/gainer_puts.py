@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
@@ -12,6 +13,20 @@ from ..universe import get_universe
 from .base import Indicator, Signal
 
 logger = logging.getLogger(__name__)
+
+_RISK_FREE_RATE = 0.05
+
+
+def _norm_cdf(x: float) -> float:
+    return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
+
+
+def _prob_itm_put(S: float, K: float, T: float, sigma: float) -> float:
+    """Black-Scholes risk-neutral probability that a put expires ITM (N(-d2))."""
+    if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
+        return 0.0
+    d2 = (math.log(S / K) + (_RISK_FREE_RATE - 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+    return _norm_cdf(-d2)
 
 
 @dataclass
@@ -94,7 +109,6 @@ class GainerPutScanner(Indicator):
         return float(price) if price else None
 
     def _scan_puts(self, ticker: str, gain_pct: float, current_price: float) -> list[Signal]:
-        signals: list[Signal] = []
         today = date.today()
         min_exp = today + timedelta(days=config.gainer_put_min_dte)
         max_exp = today + timedelta(days=config.gainer_put_max_dte)
@@ -113,8 +127,10 @@ class GainerPutScanner(Indicator):
 
         if not expirations:
             logger.debug("%s: no expirations in %d–%d DTE window", ticker, config.gainer_put_min_dte, config.gainer_put_max_dte)
-            return signals
+            return []
 
+        # Collect all qualifying candidates across every expiration
+        candidates: list[dict] = []
         for expiry in expirations:
             chain_key = f"puts_{ticker}_{expiry}"
             puts = cache.get(chain_key)
@@ -126,39 +142,60 @@ class GainerPutScanner(Indicator):
                     logger.error("%s: failed to fetch options for %s: %s", ticker, expiry, e)
                     continue
 
+            # Use lastPrice as fallback when ask is 0 (yfinance returns 0 after hours)
+            effective_ask = puts["ask"].where(puts["ask"] > 0, puts["lastPrice"])
+            # Accept volume > 0 as liquidity signal when OI is unavailable
+            liquid = (puts["openInterest"] >= config.gainer_put_min_oi) | (puts["volume"] > 0)
+
             mask = (
                 (~puts["inTheMoney"]) &
-                (puts["ask"] > 0) &
-                (puts["ask"] / current_price <= config.gainer_put_max_cost_pct) &
+                (effective_ask > 0) &
+                (effective_ask / current_price <= config.gainer_put_max_cost_pct) &
                 (puts["impliedVolatility"] <= config.gainer_put_max_iv) &
-                (puts["openInterest"] >= config.gainer_put_min_oi)
+                liquid
             )
-            cheap_puts = puts[mask]
+            for _, row in puts[mask].iterrows():
+                ask = row["ask"] if row["ask"] > 0 else row["lastPrice"]
+                breakeven = row["strike"] - ask
+                breakeven_drop_pct = (current_price - breakeven) / current_price * 100
+                return_multiple = row["strike"] / ask
+                T = (date.fromisoformat(expiry) - today).days / 365.0
+                prob_itm = _prob_itm_put(current_price, row["strike"], T, row["impliedVolatility"])
+                score = return_multiple * prob_itm
+                candidates.append({
+                    "ticker": ticker,
+                    "gain_pct": gain_pct,
+                    "current_price": current_price,
+                    "strike": row["strike"],
+                    "expiry": expiry,
+                    "ask": ask,
+                    "bid": row["bid"],
+                    "iv": row["impliedVolatility"],
+                    "open_interest": row["openInterest"],
+                    "volume": row.get("volume"),
+                    "contract": row["contractSymbol"],
+                    "breakeven_drop_pct": breakeven_drop_pct,
+                    "return_multiple": return_multiple,
+                    "prob_itm": prob_itm,
+                    "score": score,
+                })
 
-            for _, row in cheap_puts.iterrows():
-                signals.append(Signal(
-                    triggered=True,
-                    title=f"Put Opportunity: {ticker}",
-                    subtitle=f"{ticker} (+{gain_pct:.0f}% YTD)",
-                    message=(
-                        f"${row['ask']:.2f} ask | "
-                        f"${row['strike']:.0f} strike | "
-                        f"IV {row['impliedVolatility']:.0%} | "
-                        f"Exp {expiry}"
-                    ),
-                    data={
-                        "ticker": ticker,
-                        "gain_pct": gain_pct,
-                        "current_price": current_price,
-                        "strike": row["strike"],
-                        "expiry": expiry,
-                        "ask": row["ask"],
-                        "bid": row["bid"],
-                        "iv": row["impliedVolatility"],
-                        "open_interest": row["openInterest"],
-                        "volume": row.get("volume"),
-                        "contract": row["contractSymbol"],
-                    },
-                ))
+        # Sort: composite score (return × prob) DESC, cheapest ask as tiebreak
+        candidates.sort(key=lambda c: (-c["score"], c["ask"]))
+        candidates = candidates[:10]
 
-        return signals
+        return [
+            Signal(
+                triggered=True,
+                title=f"Put Opportunity: {ticker}",
+                subtitle=f"{ticker} (+{gain_pct:.0f}% YTD)",
+                message=(
+                    f"{c['return_multiple']:.0f}x return | "
+                    f"${c['ask']:.2f} ask | "
+                    f"${c['strike']:.0f} strike | "
+                    f"Exp {c['expiry']}"
+                ),
+                data=c,
+            )
+            for c in candidates
+        ]
