@@ -23,5 +23,13 @@ class Config:
     # Alpha Vantage
     alpha_vantage_api_key: str = os.getenv("ALPHA_VANTAGE_API_KEY", "")
 
+    # Gainer put scanner
+    gainer_min_gain_pct: float = float(os.getenv("GAINER_MIN_GAIN_PCT", "500"))
+    gainer_put_max_cost_pct: float = float(os.getenv("GAINER_PUT_MAX_COST_PCT", "0.05"))
+    gainer_put_max_iv: float = float(os.getenv("GAINER_PUT_MAX_IV", "0.60"))
+    gainer_put_min_oi: int = int(os.getenv("GAINER_PUT_MIN_OI", "10"))
+    gainer_put_min_dte: int = int(os.getenv("GAINER_PUT_MIN_DTE", "60"))
+    gainer_put_max_dte: int = int(os.getenv("GAINER_PUT_MAX_DTE", "180"))
+
 
 config = Config()

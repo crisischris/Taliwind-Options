@@ -2,8 +2,9 @@ import logging
 
 from indicators.config import config
 from indicators.notifier import Alert, send_alert
-from indicators.scheduler import is_market_open, register, start
+from indicators.scheduler import is_market_open, register, register_daily, start
 from indicators.sources import PriceAlert, PriceThreshold
+from indicators.sources.gainer_puts import GainerPutScanner
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,13 +25,27 @@ price_alerts = PriceAlert(
     ]
 )
 
+put_scanner = GainerPutScanner()
 
-# ── Job that runs on each tick ────────────────────────────────────────────────
+
+# ── Jobs ──────────────────────────────────────────────────────────────────────
 
 def run_checks() -> None:
     logger.info("Running checks for watchlist: %s", config.watchlist)
 
     for signal in price_alerts.check():
+        if signal.triggered:
+            send_alert(Alert(
+                title=signal.title,
+                message=signal.message,
+                subtitle=signal.subtitle,
+            ))
+
+
+def run_daily_checks() -> None:
+    logger.info("Running daily gainer put scan")
+
+    for signal in put_scanner.check():
         if signal.triggered:
             send_alert(Alert(
                 title=signal.title,
@@ -49,4 +64,5 @@ if __name__ == "__main__":
         run_checks()
 
     register(run_checks)
+    register_daily(run_daily_checks)
     start()
