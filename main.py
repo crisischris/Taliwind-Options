@@ -1,5 +1,8 @@
 import logging
 
+import setproctitle
+setproctitle.setproctitle("indicators")  # shows as "indicators" in Activity Monitor instead of "python"
+
 from indicators.notifier import Alert, send_alert
 from indicators.report import generate_and_open
 from indicators.scheduler import register_daily, start

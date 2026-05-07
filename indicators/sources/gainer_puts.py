@@ -15,6 +15,7 @@ from .base import Indicator, Signal
 logger = logging.getLogger(__name__)
 
 _RISK_FREE_RATE = 0.05
+_TERM_BOUNDARY_DAYS = 180  # 6 months — short below, long at or above
 
 
 def _norm_cdf(x: float) -> float:
@@ -144,8 +145,13 @@ class GainerPutScanner(Indicator):
 
             # Use lastPrice as fallback when ask is 0 (yfinance returns 0 after hours)
             effective_ask = puts["ask"].where(puts["ask"] > 0, puts["lastPrice"])
-            # Accept volume > 0 as liquidity signal when OI is unavailable
-            liquid = (puts["openInterest"] >= config.gainer_put_min_oi) | (puts["volume"] > 0)
+            # Liquidity: OI threshold, or any volume today, or any historical trade (lastPrice > 0)
+            # The last condition catches long-dated / LEAP puts that are quote-able but thinly traded
+            liquid = (
+                (puts["openInterest"] >= config.gainer_put_min_oi) |
+                (puts["volume"] > 0) |
+                (puts["lastPrice"] > 0)
+            )
 
             mask = (
                 (~puts["inTheMoney"]) &
@@ -159,9 +165,11 @@ class GainerPutScanner(Indicator):
                 breakeven = row["strike"] - ask
                 breakeven_drop_pct = (current_price - breakeven) / current_price * 100
                 return_multiple = row["strike"] / ask
-                T = (date.fromisoformat(expiry) - today).days / 365.0
+                dte = (date.fromisoformat(expiry) - today).days
+                T = dte / 365.0
                 prob_itm = _prob_itm_put(current_price, row["strike"], T, row["impliedVolatility"])
                 score = return_multiple * prob_itm
+                term = "short" if dte < _TERM_BOUNDARY_DAYS else "long"
                 candidates.append({
                     "ticker": ticker,
                     "gain_pct": gain_pct,
@@ -178,11 +186,26 @@ class GainerPutScanner(Indicator):
                     "return_multiple": return_multiple,
                     "prob_itm": prob_itm,
                     "score": score,
+                    "dte": dte,
+                    "term": term,
                 })
 
-        # Sort: composite score (return × prob) DESC, cheapest ask as tiebreak
-        candidates.sort(key=lambda c: (-c["score"], c["ask"]))
-        candidates = candidates[:10]
+        # Sort and cap separately per term so each bucket gets its best 10
+        _sort_key = lambda c: (-c["score"], c["ask"])
+        short = sorted([c for c in candidates if c["term"] == "short"], key=_sort_key)[:10]
+        long_ = sorted([c for c in candidates if c["term"] == "long"], key=_sort_key)[:10]
+
+        # Moonshot bucket: top 5 by pure return_multiple, excluding anything already surfaced above
+        already_shown = {c["contract"] for c in short + long_}
+        moonshots = [
+            {**c, "term": "moonshot"}
+            for c in sorted(
+                [c for c in candidates if c["contract"] not in already_shown],
+                key=lambda c: -c["return_multiple"],
+            )[:5]
+        ]
+
+        candidates = short + long_ + moonshots
 
         return [
             Signal(
