@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes hero-flash {
+  0%, 100% { background-color: rgba(234, 179, 8, 0.1); }
+  50%       { background-color: rgba(234, 179, 8, 0.35); }
+}
+.hero-flash { animation: hero-flash 0.7s ease 3; }

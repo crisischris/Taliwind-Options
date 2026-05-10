@@ -79,7 +79,7 @@ class IndicatorsStack(cdk.Stack):
         s3_deploy.BucketDeployment(
             self,
             "DeployViewer",
-            sources=[s3_deploy.Source.asset("reports", exclude=["*.json"])],
+            sources=[s3_deploy.Source.asset("frontend/dist")],
             destination_bucket=bucket,
         )
 
