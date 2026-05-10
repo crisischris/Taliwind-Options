@@ -32,13 +32,7 @@ def _load_secrets_from_ssm() -> None:
 def handler(event: dict, context) -> dict:
     _load_secrets_from_ssm()
 
-    # Import here so config.py reads env vars after SSM is loaded
-    from indicators.scheduler import is_market_open
     from indicators.sources.gainer_puts import GainerPutScanner
-
-    if not is_market_open():
-        logger.info("Market closed (holiday or outside hours) — skipping scan")
-        return {"statusCode": 200, "body": "market closed"}
 
     logger.info("Running daily gainer put scan")
     signals = [s for s in GainerPutScanner().check() if s.triggered]
