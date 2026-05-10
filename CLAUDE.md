@@ -8,49 +8,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 pip install -e .
 
-# Run the app (blocks; Ctrl+C to stop)
-python main.py
-
-# Send a test notification without running the scheduler
-.venv/bin/python -c "
-from indicators.notifier import Alert, send_alert
-send_alert(Alert(title='Test', subtitle='SPY', message='\$733.83 > \$560.00'))
+# Invoke the scanner locally (runs a full scan, no S3 write)
+python -c "
+from indicators.sources.gainer_puts import GainerPutScanner
+signals = [s for s in GainerPutScanner().check() if s.triggered]
+print(f'{len(signals)} signals found')
 "
+
+# Run the React dev server (proxies JSON reports from the Python server)
+# Terminal 1: python -m http.server 8765 --directory reports/
+# Terminal 2: cd frontend && npm run dev
 ```
 
 There are no tests or linter configs yet.
 
-## System dependencies
-
-`terminal-notifier` must be installed for Mac notifications (`brew install terminal-notifier`). The old `osascript display notification` approach doesn't appear in System Settings → Notifications on macOS Sequoia.
-
 ## Architecture
 
-This is a Python cron app that polls financial indicators on a schedule and fires desktop or SMS alerts when thresholds are crossed.
+This is a Lambda-based scanner that runs twice daily (9:35 AM and midday ET), finds S&P 500 / NASDAQ 100 tickers with extreme YTD gains, surfaces cheap OTM puts on those tickers, and writes a JSON report to S3. A React static site reads those reports.
 
-**Entry point — `main.py`**
-This is where indicators are instantiated and configured, and where `run_checks()` is defined. Adding a new indicator means instantiating it here and calling `.check()` inside `run_checks()`.
+**Entry point — `lambda_handler.py`**
+AWS Lambda handler. Loads SSM secrets, runs the scanner, writes JSON to S3.
 
 **Core abstractions (`indicators/sources/base.py`)**
 - `Indicator` — abstract base class; subclasses implement `check() -> list[Signal]`
 - `Signal` — dataclass returned by `check()`; has `triggered`, `title`, `message`, `subtitle`, `data`
 
-**Indicator implementations (`indicators/sources/`)**
-- `PriceAlert` — fetches via `yfinance.Ticker.fast_info.last_price`; takes `PriceThreshold` objects (ticker + optional `above`/`below`)
-- `AlphaVantageAlert` — same interface as `PriceAlert` but fetches via Alpha Vantage `GLOBAL_QUOTE` endpoint using `httpx`; requires `ALPHA_VANTAGE_API_KEY` in env
+**Scanner (`indicators/sources/gainer_puts.py`)**
+- `GainerPutScanner` — fetches 1-year history for the universe, finds gainers above threshold, scans option chains for qualifying puts, scores by return × prob ITM
 
-**Notification (`indicators/notifier.py`)**
-- `send_alert(Alert)` — dispatches to `terminal-notifier` (mac) and/or Twilio SMS based on `NOTIFY_VIA` env var. Twilio is lazily imported and optional.
-
-**Scheduler (`indicators/scheduler.py`)**
-- Wraps APScheduler's `BlockingScheduler` (ET timezone). `register(func)` wraps the job in a market-hours guard using `exchange_calendars` (XNYS calendar) — jobs silently no-op outside NYSE trading hours (9:30–16:00 ET, Mon–Fri, holidays respected).
-- `is_market_open()` is exported for use in `main.py` to gate the immediate startup check.
+**Reports (`indicators/report.py`)**
+- `_build_report(signals, report_id, timestamp)` — builds the JSON structure written to S3
+- Locally: `generate_and_open(signals)` writes JSON to `reports/` and opens the dev server
 
 **Config (`indicators/config.py`)**
-- All settings read from env vars at import time. Copy `.env.example` to `.env`. Key vars: `CHECK_INTERVAL_MINUTES`, `NOTIFY_VIA` (`mac`/`sms`/`both`), `WATCHLIST`, Twilio credentials, `ALPHA_VANTAGE_API_KEY`.
+- All settings read from env vars. Key vars: `GAINER_MIN_GAIN_PCT`, `GAINER_PUT_MAX_COST_PCT`, `GAINER_PUT_MAX_IV`, `GAINER_PUT_MIN_OI`, `GAINER_PUT_MIN_DTE`, `GAINER_PUT_MAX_DTE`
+
+**Frontend (`frontend/`)**
+- Vite + React + TypeScript + Tailwind + DaisyUI
+- `npm run dev` for local dev (proxies JSON from `:8765`)
+- `npm run build` outputs to `frontend/dist/` which CDK deploys to S3
+
+**Infrastructure (`infra/`)**
+- CDK stack: Lambda (Python 3.12), EventBridge cron (twice daily), S3 static site, SSM secrets
 
 ## Adding a new indicator
 
 1. Create `indicators/sources/myindicator.py` — subclass `Indicator`, implement `check() -> list[Signal]`
 2. Export it from `indicators/sources/__init__.py`
-3. Instantiate it in `main.py` and call `.check()` inside `run_checks()`
+3. Call it in `lambda_handler.py`

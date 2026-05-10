@@ -16,44 +16,11 @@ class IndicatorsStack(cdk.Stack):
         super().__init__(scope, id, **kwargs)
 
         # ── Secrets (SSM Parameter Store) ─────────────────────────────────────
-        # SecureString parameters — replace placeholder values before deploying.
 
         alpha_vantage_key = ssm.StringParameter(
             self,
             "AlphaVantageKey",
             parameter_name="/indicators/ALPHA_VANTAGE_API_KEY",
-            string_value="REPLACE_ME",
-            tier=ssm.ParameterTier.STANDARD,
-        )
-
-        twilio_sid = ssm.StringParameter(
-            self,
-            "TwilioSid",
-            parameter_name="/indicators/TWILIO_ACCOUNT_SID",
-            string_value="REPLACE_ME",
-            tier=ssm.ParameterTier.STANDARD,
-        )
-
-        twilio_token = ssm.StringParameter(
-            self,
-            "TwilioToken",
-            parameter_name="/indicators/TWILIO_AUTH_TOKEN",
-            string_value="REPLACE_ME",
-            tier=ssm.ParameterTier.STANDARD,
-        )
-
-        twilio_from = ssm.StringParameter(
-            self,
-            "TwilioFrom",
-            parameter_name="/indicators/TWILIO_FROM",
-            string_value="REPLACE_ME",
-            tier=ssm.ParameterTier.STANDARD,
-        )
-
-        twilio_to = ssm.StringParameter(
-            self,
-            "TwilioTo",
-            parameter_name="/indicators/TWILIO_TO",
             string_value="REPLACE_ME",
             tier=ssm.ParameterTier.STANDARD,
         )
@@ -75,7 +42,6 @@ class IndicatorsStack(cdk.Stack):
             removal_policy=cdk.RemovalPolicy.RETAIN,
         )
 
-        # Sync the static viewer into the bucket on every cdk deploy
         s3_deploy.BucketDeployment(
             self,
             "DeployViewer",
@@ -84,8 +50,6 @@ class IndicatorsStack(cdk.Stack):
         )
 
         # ── Lambda ────────────────────────────────────────────────────────────
-        # CDK bundles deps via pip into a zip at synth time — no Docker image needed.
-        # The bundling step runs in a Lambda-compatible container locally.
 
         scanner_fn = lambda_.Function(
             self,
@@ -100,9 +64,7 @@ class IndicatorsStack(cdk.Stack):
                         "bash", "-c",
                         " && ".join([
                             "mkdir -p /asset-output/.tmp",
-                            # TMPDIR must be on the same volume as /asset-output to avoid
-                            # cross-device rename errors when pip moves packages into place
-                            "TMPDIR=/asset-output/.tmp pip install apscheduler python-dotenv httpx 'yfinance>=0.2' exchange-calendars lxml setproctitle -t /asset-output --quiet",
+                            "TMPDIR=/asset-output/.tmp pip install python-dotenv httpx 'yfinance>=0.2' lxml -t /asset-output --quiet",
                             "rm -rf /asset-output/.tmp",
                             "cp -r indicators lambda_handler.py /asset-output",
                         ]),
@@ -113,14 +75,12 @@ class IndicatorsStack(cdk.Stack):
             memory_size=1024,
             environment={
                 "REPORTS_BUCKET": bucket.bucket_name,
-                "NOTIFY_VIA": "sms",
                 "GAINER_MIN_GAIN_PCT": "500",
                 "GAINER_PUT_MAX_COST_PCT": "0.05",
                 "GAINER_PUT_MAX_IV": "2.00",
                 "GAINER_PUT_MIN_OI": "10",
                 "GAINER_PUT_MIN_DTE": "60",
                 "GAINER_PUT_MAX_DTE": "1000",
-                # Secrets are fetched from SSM at runtime (see lambda_handler.py)
                 "SSM_PREFIX": "/indicators",
             },
         )
@@ -128,27 +88,20 @@ class IndicatorsStack(cdk.Stack):
         bucket.grant_put(scanner_fn)
         bucket.grant_read(scanner_fn)
 
-        # Grant Lambda read access to all SSM parameters under /indicators/
-        for param in [alpha_vantage_key, twilio_sid, twilio_token, twilio_from, twilio_to]:
-            param.grant_read(scanner_fn)
+        alpha_vantage_key.grant_read(scanner_fn)
 
-        # grant_read only covers GetParameter — GetParametersByPath needs a separate statement
         scanner_fn.add_to_role_policy(iam.PolicyStatement(
             actions=["ssm:GetParametersByPath"],
             resources=[f"arn:aws:ssm:{self.region}:{self.account}:parameter/indicators*"],
         ))
 
         # ── EventBridge: twice-daily cron ────────────────────────────────────
-        # EventBridge runs in UTC and doesn't adjust for DST, so we pick times
-        # that land within market hours in both EST (UTC-5) and EDT (UTC-4).
-        # The Lambda's is_market_open() guard handles holidays and edge cases.
-        #
         # 14:35 UTC = 9:35 AM EST / 10:35 AM EDT  (near open)
         # 17:00 UTC = 12:00 PM EST / 1:00 PM EDT  (midday)
 
         for rule_id, hour, minute in [
-            ("OpenScanRule",   "14", "35"),
-            ("MidayScanRule",  "17", "0"),
+            ("OpenScanRule",  "14", "35"),
+            ("MidayScanRule", "17", "0"),
         ]:
             events.Rule(
                 self,
