@@ -7,3 +7,7 @@
   50%       { background-color: rgba(234, 179, 8, 0.35); }
 }
 .hero-flash { animation: hero-flash 0.7s ease 3; }
+
+/* DaisyUI collapse sets overflow:hidden which clips horizontal table scroll.
+   Override x-axis only — vertical collapse still works via grid-template-rows. */
+.collapse { overflow-x: auto; }
