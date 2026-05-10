@@ -8,7 +8,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-_CACHE_DIR = Path(__file__).parent.parent / ".cache"
+import os
+_CACHE_DIR = Path("/tmp/.cache") if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else Path(__file__).parent.parent / ".cache"
 
 
 def _path(key: str) -> Path:
