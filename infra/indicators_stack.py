@@ -2,6 +2,7 @@ import aws_cdk as cdk
 from aws_cdk import (
     aws_events as events,
     aws_events_targets as targets,
+    aws_iam as iam,
     aws_lambda as lambda_,
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
@@ -130,6 +131,12 @@ class IndicatorsStack(cdk.Stack):
         # Grant Lambda read access to all SSM parameters under /indicators/
         for param in [alpha_vantage_key, twilio_sid, twilio_token, twilio_from, twilio_to]:
             param.grant_read(scanner_fn)
+
+        # grant_read only covers GetParameter — GetParametersByPath needs a separate statement
+        scanner_fn.add_to_role_policy(iam.PolicyStatement(
+            actions=["ssm:GetParametersByPath"],
+            resources=[f"arn:aws:ssm:{self.region}:{self.account}:parameter/indicators*"],
+        ))
 
         # ── EventBridge: twice-daily cron ────────────────────────────────────
         # EventBridge runs in UTC and doesn't adjust for DST, so we pick times
