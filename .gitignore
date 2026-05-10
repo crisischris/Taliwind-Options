@@ -9,7 +9,7 @@ build/
 !.env.example
 .DS_Store
 .cache/
-reports/*.json
+reports*
 cdk.out/
 frontend/node_modules/
 frontend/dist/

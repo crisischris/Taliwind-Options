@@ -27,7 +27,7 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
         <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl">{icon}</span>
           <h2 className="card-title text-yellow-300/70 text-sm font-semibold uppercase tracking-widest">
-            {label} — click to jump to row
+            {label}
           </h2>
         </div>
 

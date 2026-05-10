@@ -1,28 +1,18 @@
-# TODO
+TODO
 
-## Bugs / Investigations
-
-- **Why exactly 60 short and 60 long?** Suspiciously round — likely the top-10-per-term cap hitting exactly 6 tickers × 10. Confirm and decide if the cap should be raised or made dynamic.
-- **Not every ticker needs all three sections.** A ticker should only show the sections it actually has qualifying options for (short, long, moonshots). Verify the current collapse behavior and clean up empty sections if any slip through.
-- **Investigate API usage.** yfinance, Wikipedia scraping — are we at risk of rate limiting or getting blocked at scale? What are the actual limits?
-- **Run cadence.** Does running once at 9:35 AM make sense? Options don't move that dramatically intraday for this strategy. Consider once daily pre-market, or maybe 2–3x (open, midday, close) and evaluate the tradeoff.
-
-## Product / Features
-
-- **Report retros.** Run a backtest: for each historical signal, did the put actually expire ITM? Track "most profitable play" and the optimal exit day (not just expiry). This is the core feedback loop for validating the strategy.
-- **Profiles / settings.** Per-user config for gain threshold, DTE window, cost %, IV cap. Could be as simple as named `.env` profiles or as complex as a settings UI.
-- **Calls.** Add a calls scan to complement puts — symmetric play for tickers that have crashed hard and might revert upward.
-- **Premium features.** Ideas: real-time alerts when a qualifying option appears mid-day, email/SMS delivery of the report, watchlist pinning, historical signal archive, portfolio tracker (track which signals you actually acted on).
-- **Publicize?** Who is the audience? Consider whether this is a personal tool, a paid product, or open source. Shapes every other decision.
-
-## Technical Scaling
-
-- **Webapp.** What does this look like as an actual web app? Framework choice (FastAPI + HTMX? Next.js?), hosting, auth. The HTML report is already 90% of a frontend — could be served directly.
-- **Mobile friendly.** The current report is desktop-first. Tables overflow poorly on small screens. Either a responsive redesign or a separate mobile summary view.
-- **Cloud + DB + storage.** If this runs daily and stores reports + retro data, what's the right stack? Object storage for HTML reports, a lightweight DB (SQLite → Postgres) for signal history, scheduled runs via cron/cloud scheduler.
-- **Scale.** Universe is ~600 tickers today. What happens at 6,000? Bulk yfinance downloads, parallel option chain fetches, caching strategy at scale.
-
-## Code Quality
-
-- **De-AI it.** Remove or tone down the emojis, gold gradient hero cards, and "moonshot" language if this goes to a professional or external audience. Make it configurable (e.g. `REPORT_STYLE=professional|fun`).
-- **Tests.** At this stage: unit test the Black-Scholes calc, the scoring logic, and the HTML renderer (snapshot tests). Integration test the scanner against a small hardcoded universe with mocked yfinance responses. Define what "tested" means before adding CI.
+- investigate why we're getting exactly 60 short and longs                                                                          
+- we don't need one ticker to have all 3 sections (long, short, moonshots), thjere can be tickers that have only one qualifying     
+  thing                                                                                                                               
+- what does this look like as an actual webapp?                                                                                     
+- profiles?  settings?                                                                                                              
+- what kind of 'premium' features could we add?                                                                                     
+- investigate API usage, will we exhaust anything?                                                                                  
+- should this actually run ~N times a day?  does that make sense?                                                                   
+- report retros, we should run an analysis on how many times a play ACTUALLY was ITM at expiry. Maybe even something like 'most     
+profit' and at what day?                                                                                                            
+- how does this scale?  cloud services? DBs, storage ETC                                                                            
+- publicize?                                                                                                                        
+- tabular the puts, add a 'calls' to round out all options.                                                                         
+- de-AI it?  remove emojis etc.                                                                                                     
+- add tests (what does that mean at this stage?)                                                                                    
+- mobile friendly?   
