@@ -47,6 +47,7 @@ class IndicatorsStack(cdk.Stack):
             "DeployViewer",
             sources=[s3_deploy.Source.asset("frontend/dist")],
             destination_bucket=bucket,
+            prune=False,  # never delete existing files — runtime JSON reports must persist
         )
 
         # ── Lambda ────────────────────────────────────────────────────────────
