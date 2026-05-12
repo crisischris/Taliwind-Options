@@ -27,6 +27,7 @@ class OptionsHunterStack(cdk.Stack):
                 ignore_public_acls=False,
                 restrict_public_buckets=False,
             ),
+            versioned=True,
             removal_policy=cdk.RemovalPolicy.RETAIN,
         )
 
