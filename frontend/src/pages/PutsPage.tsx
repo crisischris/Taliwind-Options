@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { HERO_CARD, PUTS_PAGE } from '@/constants/strings'
 import StatsBar from '@/components/StatsBar'
+import MethodologyDisclosure from '@/components/MethodologyDisclosure'
 import HeroCard from '@/components/HeroCard'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
 import TickersModal from '@/components/TickersModal'
@@ -159,6 +160,7 @@ export default function PutsPage() {
 
         {report && (
           <>
+            <MethodologyDisclosure />
             <StatsBar summary={report.summary} onShowTickers={() => setShowModal(true)} />
 
             {/* Hero cards */}

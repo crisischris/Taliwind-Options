@@ -78,6 +78,29 @@ export const PUTS_PAGE = {
   noNewItems:  'no new items',
 } as const
 
+export const METHODOLOGY = {
+  trigger: 'How is this report generated?',
+  thesis: {
+    heading: 'The Thesis',
+    body: 'Stocks with 500%+ YTD gains tend to mean-revert. The move may be fundamental, but the options market regularly underprices downside risk on extreme gainers. This scanner finds those names and surfaces cheap out-of-the-money puts on them. The setup is asymmetric. Small premium at risk, large payoff if the correction plays out.',
+  },
+  judgementCalls: {
+    heading: 'Judgement Calls',
+    intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
+    rules: [
+      { rule: 'Universe', detail: 'S&P 500 and NASDAQ 100 constituents only — liquid, well-known names where options markets are active.' },
+      { rule: '500%+ YTD gain', detail: 'The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker.' },
+      { rule: 'Out-of-the-money puts only', detail: 'We want cheap optionality on a correction, not intrinsic value. ITM puts are excluded.' },
+      { rule: 'Expiry between 60 and 1,000 DTE', detail: 'Too short and there is no time for the thesis to play out. Too long and pricing becomes speculative. The sweet spot is roughly 2 months to 3 years out.' },
+      { rule: 'Ask ≤ 5% of stock price', detail: 'Keeps the cost-of-insurance sensible. A put that costs more than 5% of the underlying is already pricing in meaningful downside.' },
+      { rule: 'Implied volatility ≤ 200%', detail: 'Extremely high IV means the market is already pricing in a crash. We want names where the put is still relatively cheap.' },
+      { rule: 'Minimum liquidity', detail: 'Open interest ≥ 10, or any volume traded today, or a recorded last price. Catches thinly-traded LEAPs that are still quote-able.' },
+      { rule: 'Scored by return × prob ITM', detail: 'Puts are ranked by return multiple (strike ÷ ask) multiplied by Black-Scholes probability of expiring in-the-money. This balances raw upside against realistic odds.' },
+      { rule: 'Top 10 per bucket', detail: 'Short-dated (< 6 months) and long-dated / LEAPs (6+ months) are capped at 10 each, sorted by score. Moonshots — the top 5 by raw return multiple — are surfaced separately.' },
+    ],
+  },
+} as const
+
 export const ABOUT_PAGE = {
   title: 'About',
   body1: 'Options Hunter is a daily scanner that finds S&P 500 and NASDAQ 100 stocks with extreme YTD gains and surfaces cheap out-of-the-money puts as potential mean-reversion plays.',
