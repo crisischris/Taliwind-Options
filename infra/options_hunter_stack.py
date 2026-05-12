@@ -18,7 +18,7 @@ class OptionsHunterStack(cdk.Stack):
         bucket = s3.Bucket(
             self,
             "ReportsBucket",
-            bucket_name=f"options-hunter-reports-{self.account}",
+            bucket_name="options-hunter-reports",
             website_index_document="index.html",
             public_read_access=True,
             block_public_access=s3.BlockPublicAccess(
