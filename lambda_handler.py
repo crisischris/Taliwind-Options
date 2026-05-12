@@ -1,10 +1,7 @@
 """
-AWS Lambda entry point for the indicators scanner.
+AWS Lambda entry point for the options-hunter scanner.
 
-Replaces main.py's scheduler-based run with a single invocation that:
-  1. Fetches secrets from SSM
-  2. Runs the put scanner
-  3. Writes the JSON report + manifest to S3 instead of local disk
+Single invocation that runs the put scanner and writes the JSON report + manifest to S3.
 """
 import json
 import logging
@@ -19,18 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _load_secrets_from_ssm() -> None:
-    """Pull SSM parameters into env vars so existing config.py picks them up."""
-    prefix = os.environ.get("SSM_PREFIX", "/indicators")
-    ssm = boto3.client("ssm", region_name=os.environ.get("AWS_REGION", "us-east-1"))
-    params = ssm.get_parameters_by_path(Path=prefix, WithDecryption=True)
-    for p in params["Parameters"]:
-        key = p["Name"].removeprefix(prefix + "/")
-        os.environ.setdefault(key, p["Value"])
-
-
 def handler(event: dict, context) -> dict:
-    _load_secrets_from_ssm()
 
     from indicators.sources.gainer_puts import GainerPutScanner
 

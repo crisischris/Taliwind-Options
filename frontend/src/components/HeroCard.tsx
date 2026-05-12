@@ -1,5 +1,8 @@
-import type { Put } from '../types/report'
-import { ivCls, probCls } from '../utils/colors'
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { HERO_CARD } from "@/constants/strings"
+import { ivCls, probCls } from "@/utils/colors"
+import type { Put } from "@/types/report"
 
 interface HeroPut extends Put {
   gain_pct: number
@@ -19,66 +22,64 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
   const contractCost = put.ask * 100
 
   return (
-    <div
-      className="card bg-gradient-to-br from-yellow-900/40 to-base-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-400/10 cursor-pointer hover:border-yellow-300/80 transition-colors"
+    <Card
+      className="border-2 border-gold/40 bg-gradient-to-br from-gold/10 to-card shadow-lg shadow-gold/10 cursor-pointer hover:border-gold/60 transition-colors"
       onClick={() => onScrollTo(heroRowId)}
     >
-      <div className="card-body">
+      <CardContent className="p-5">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl">{icon}</span>
-          <h2 className="card-title text-yellow-300/70 text-sm font-semibold uppercase tracking-widest">
-            {label}
-          </h2>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gold/80">{label}</p>
         </div>
 
         <div className="flex flex-wrap items-baseline gap-4 mb-4">
-          <span className="text-yellow-300 text-5xl font-black tracking-tight">{put.ticker}</span>
-          <span className="badge badge-warning badge-outline text-sm font-semibold">
+          <span className="text-gold text-5xl font-black tracking-tight">{put.ticker}</span>
+          <Badge variant="gold" className="text-sm font-semibold">
             +{Math.round(put.gain_pct)}% YTD
-          </span>
-          <span className="text-base-content/40 text-sm">@ ${put.current_price.toFixed(2)}</span>
+          </Badge>
+          <span className="text-muted-foreground text-sm">@ ${put.current_price.toFixed(2)}</span>
         </div>
 
         <div className="flex flex-wrap gap-6">
           <div>
-            <div className="text-yellow-300 text-4xl font-black">{Math.round(put.return_multiple)}x</div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Return Multiple</div>
+            <div className="text-gold text-4xl font-black">{Math.round(put.return_multiple)}x</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.returnMultiple}</div>
           </div>
           <div>
             <div className={`${probCls(put.prob_itm)} text-4xl font-black`}>
               {(put.prob_itm * 100).toFixed(1)}%
             </div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Prob ITM</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.probItm}</div>
           </div>
 
-          <div className="divider divider-horizontal hidden sm:flex" />
+          <div className="hidden sm:block w-px bg-border self-stretch mx-2" />
 
           <div>
-            <div className="text-success text-2xl font-bold">${put.ask.toFixed(2)}</div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Ask / Share</div>
+            <div className="text-gain text-2xl font-bold">${put.ask.toFixed(2)}</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.askPerShare}</div>
           </div>
           <div>
-            <div className="text-success text-2xl font-bold">
+            <div className="text-gain text-2xl font-bold">
               ${contractCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Contract Cost</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.contractCost}</div>
           </div>
           <div>
-            <div className="text-base-content text-2xl font-bold">${Math.round(put.strike)}</div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Strike</div>
+            <div className="text-2xl font-bold">${Math.round(put.strike)}</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.strike}</div>
           </div>
           <div>
-            <div className="text-base-content text-2xl font-bold">{put.expiry}</div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">Expiry</div>
+            <div className="text-2xl font-bold">{put.expiry}</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.expiry}</div>
           </div>
           <div>
             <div className={`${ivCls(put.iv)} text-2xl font-bold`}>{(put.iv * 100).toFixed(0)}%</div>
-            <div className="text-base-content/50 text-xs uppercase tracking-wide mt-1">IV</div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.iv}</div>
           </div>
         </div>
 
-        <div className="mt-3 font-mono text-xs text-base-content/30">{put.contract}</div>
-      </div>
-    </div>
+        <div className="mt-3 font-mono text-xs text-muted-foreground/40">{put.contract}</div>
+      </CardContent>
+    </Card>
   )
 }

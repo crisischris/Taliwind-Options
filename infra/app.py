@@ -1,12 +1,12 @@
 import os
 import aws_cdk as cdk
-from indicators_stack import IndicatorsStack
+from options_hunter_stack import OptionsHunterStack
 
 app = cdk.App()
 
-IndicatorsStack(
+OptionsHunterStack(
     app,
-    "IndicatorsStack",
+    "OptionsHunterStack",
     env=cdk.Environment(
         account=os.environ.get("CDK_DEFAULT_ACCOUNT"),
         region=os.environ.get("CDK_DEFAULT_REGION", "us-east-1"),

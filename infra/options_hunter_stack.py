@@ -2,35 +2,23 @@ import aws_cdk as cdk
 from aws_cdk import (
     aws_events as events,
     aws_events_targets as targets,
-    aws_iam as iam,
     aws_lambda as lambda_,
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
-    aws_ssm as ssm,
 )
 from constructs import Construct
 
 
-class IndicatorsStack(cdk.Stack):
+class OptionsHunterStack(cdk.Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-
-        # ── Secrets (SSM Parameter Store) ─────────────────────────────────────
-
-        alpha_vantage_key = ssm.StringParameter(
-            self,
-            "AlphaVantageKey",
-            parameter_name="/indicators/ALPHA_VANTAGE_API_KEY",
-            string_value="REPLACE_ME",
-            tier=ssm.ParameterTier.STANDARD,
-        )
 
         # ── S3: report storage + static site ──────────────────────────────────
 
         bucket = s3.Bucket(
             self,
             "ReportsBucket",
-            bucket_name=f"indicators-reports-{self.account}",
+            bucket_name=f"options-hunter-reports-{self.account}",
             website_index_document="index.html",
             public_read_access=True,
             block_public_access=s3.BlockPublicAccess(
@@ -82,19 +70,11 @@ class IndicatorsStack(cdk.Stack):
                 "GAINER_PUT_MIN_OI": "10",
                 "GAINER_PUT_MIN_DTE": "60",
                 "GAINER_PUT_MAX_DTE": "1000",
-                "SSM_PREFIX": "/indicators",
             },
         )
 
         bucket.grant_put(scanner_fn)
         bucket.grant_read(scanner_fn)
-
-        alpha_vantage_key.grant_read(scanner_fn)
-
-        scanner_fn.add_to_role_policy(iam.PolicyStatement(
-            actions=["ssm:GetParametersByPath"],
-            resources=[f"arn:aws:ssm:{self.region}:{self.account}:parameter/indicators*"],
-        ))
 
         # ── EventBridge: twice-daily cron ────────────────────────────────────
         # 14:35 UTC = 9:35 AM EST / 10:35 AM EDT  (near open)

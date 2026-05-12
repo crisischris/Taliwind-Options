@@ -193,10 +193,10 @@ class GainerPutScanner(Indicator):
         # Sort and cap separately per term so each bucket gets its best 10
         _sort_key = lambda c: (-c["score"], c["ask"])
         short = sorted([c for c in candidates if c["term"] == "short"], key=_sort_key)[:10]
-        long_ = sorted([c for c in candidates if c["term"] == "long"], key=_sort_key)[:10]
+        long = sorted([c for c in candidates if c["term"] == "long"], key=_sort_key)[:10]
 
         # Moonshot bucket: top 5 by pure return_multiple, excluding anything already surfaced above
-        already_shown = {c["contract"] for c in short + long_}
+        already_shown = {c["contract"] for c in short + long}
         moonshots = [
             {**c, "term": "moonshot"}
             for c in sorted(
@@ -205,7 +205,7 @@ class GainerPutScanner(Indicator):
             )[:5]
         ]
 
-        candidates = short + long_ + moonshots
+        candidates = short + long + moonshots
 
         return [
             Signal(
