@@ -43,5 +43,3 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
 }
 
 export type { Page }
-
-export type { Page }
