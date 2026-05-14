@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
 
-// Parses "2026-05-09_18-59" → "May 9, 2026 at 6:59 PM"
+// Parses "2026-05-09_18-59" (UTC) → "May 9, 2026, 2:59 PM EDT"
 function formatTimestamp(raw: string): string {
   const [datePart, timePart] = raw.split('_')
   if (!datePart || !timePart) return raw
   const [h, m] = timePart.split('-').map(Number)
-  const date = new Date(`${datePart}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`)
+  const date = new Date(`${datePart}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00Z`)
   if (isNaN(date.getTime())) return raw
-  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return date.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+    timeZone: 'America/New_York',
+    timeZoneName: 'short',
+  })
 }
 import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
@@ -141,7 +146,7 @@ export default function PutsPage() {
             {diff.prevContracts.size > 0 && report && (() => {
               const newT = report.tickers.filter(t => !diff.prevTickers.has(t.ticker)).length
               const newP = report.tickers.flatMap(t => t.puts).filter(p => !diff.prevContracts.has(p.contract)).length
-              const prevLabel = diff.prevReportId?.replace('put-scan-', '').replace('_', ' at ') ?? ''
+              const prevLabel = diff.prevReportId ? formatTimestamp(diff.prevReportId.replace('put-scan-', '')) : ''
               const parts = [
                 newT > 0 && `${newT} new ticker${newT !== 1 ? 's' : ''}`,
                 newP > 0 && `${newP} new put${newP !== 1 ? 's' : ''}`,
