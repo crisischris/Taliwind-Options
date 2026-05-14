@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  pipeline:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,5 +41,18 @@ jobs:
       - name: Bootstrap CDK (idempotent)
         run: cdk bootstrap
 
-      - name: Deploy
-        run: cdk deploy --require-approval never --ci
+      # ── Beta ────────────────────────────────────────────────────────────────
+
+      - name: Deploy beta
+        run: cdk deploy -c stage=beta --require-approval never --ci
+
+      - name: Integration tests (beta)
+        run: |
+          # TODO: replace with real integration test runner once tests exist
+          # Example: invoke the beta Lambda and assert a successful response
+          echo "No integration tests yet — skipping"
+
+      # ── Prod ────────────────────────────────────────────────────────────────
+
+      - name: Deploy prod
+        run: cdk deploy -c stage=prod --require-approval never --ci
