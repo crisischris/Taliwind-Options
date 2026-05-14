@@ -39,7 +39,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Bootstrap CDK (idempotent)
-        run: cdk bootstrap
+        run: cdk bootstrap -c stage=beta
 
       # ── Beta ────────────────────────────────────────────────────────────────
 
