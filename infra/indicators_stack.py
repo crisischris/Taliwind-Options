@@ -1,10 +1,10 @@
 import aws_cdk as cdk
 from aws_cdk import (
-    aws_events as events,
-    aws_events_targets as targets,
+    aws_iam as iam,
     aws_lambda as lambda_,
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
+    aws_scheduler as scheduler,
     aws_ssm as ssm,
 )
 from constructs import Construct
@@ -128,20 +128,31 @@ class IndicatorsStack(cdk.Stack):
         for param in [alpha_vantage_key, twilio_sid, twilio_token, twilio_from, twilio_to]:
             param.grant_read(scanner_fn)
 
-        # ── EventBridge: daily cron ───────────────────────────────────────────
-        # 9:31 AM ET on weekdays — one minute after market open
+        # ── EventBridge Scheduler: daily cron ────────────────────────────────
+        # 9:31 AM ET on weekdays — one minute after market open.
+        # Uses EventBridge Scheduler (not Rules) for native DST-aware timezone
+        # support via schedule_expression_timezone.
 
-        rule = events.Rule(
+        scheduler_role = iam.Role(
             self,
-            "DailyScanRule",
-            schedule=events.Schedule.cron(
-                minute="31",
-                hour="9",
-                week_day="MON-FRI",
-                time_zone=cdk.TimeZone.AMERICA_NEW_YORK,
+            "SchedulerRole",
+            assumed_by=iam.ServicePrincipal("scheduler.amazonaws.com"),
+        )
+        scanner_fn.grant_invoke(scheduler_role)
+
+        scheduler.CfnSchedule(
+            self,
+            "DailyScanSchedule",
+            schedule_expression="cron(31 9 ? * MON-FRI *)",
+            schedule_expression_timezone="America/New_York",
+            flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                mode="OFF",
+            ),
+            target=scheduler.CfnSchedule.TargetProperty(
+                arn=scanner_fn.function_arn,
+                role_arn=scheduler_role.role_arn,
             ),
         )
-        rule.add_target(targets.LambdaFunction(scanner_fn))
 
         # ── Outputs ───────────────────────────────────────────────────────────
 
