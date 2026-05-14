@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import pickle
 from datetime import date
 from pathlib import Path
@@ -8,7 +9,6 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-import os
 _CACHE_DIR = Path("/tmp/.cache") if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else Path(__file__).parent.parent / ".cache"
 
 

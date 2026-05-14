@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { TICKER_CARD } from '@/constants/strings'
 import type { Ticker } from '@/types/report'
-import OptionsTable from './OptionsTable'
+import OptionsTable from '@/components/OptionsTable'
 
 export interface ExpansionOverride {
   open: boolean
@@ -28,15 +28,11 @@ export default function TickerCard({
   ticker, shortHeroContract, longHeroContract, moonshotHeroContract,
   prevContracts, prevTickers, newOnly, expansionOverride,
 }: Props) {
-  const [shortOpen, setShortOpen]       = useState(true)
-  const [longOpen, setLongOpen]         = useState(true)
-  const [moonshotOpen, setMoonshotOpen] = useState(true)
+  const [open, setOpen] = useState({ short: true, long: true, moonshot: true })
 
   useEffect(() => {
     if (expansionOverride == null) return
-    setShortOpen(expansionOverride.open)
-    setLongOpen(expansionOverride.open)
-    setMoonshotOpen(expansionOverride.open)
+    setOpen({ short: expansionOverride.open, long: expansionOverride.open, moonshot: expansionOverride.open })
   }, [expansionOverride])
 
   const isNew = (p: { contract: string }) =>
@@ -67,11 +63,11 @@ export default function TickerCard({
         )}
         <div className="ml-auto flex gap-1">
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
-            onClick={() => { setShortOpen(true); setLongOpen(true); setMoonshotOpen(true) }}>
+            onClick={() => setOpen({ short: true, long: true, moonshot: true })}>
             {TICKER_CARD.expand}
           </Button>
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
-            onClick={() => { setShortOpen(false); setLongOpen(false); setMoonshotOpen(false) }}>
+            onClick={() => setOpen({ short: false, long: false, moonshot: false })}>
             {TICKER_CARD.collapse}
           </Button>
         </div>
@@ -79,7 +75,8 @@ export default function TickerCard({
 
       {short.length > 0 && (
         <TermSection label={TICKER_CARD.short.label}
-          count={short.length} open={shortOpen} onToggle={setShortOpen} borderTop>
+          count={short.length} open={open.short}
+          onToggle={v => setOpen(s => ({ ...s, short: v }))} borderTop>
           <OptionsTable puts={short} currentPrice={ticker.current_price}
             heroContract={shortHeroContract} heroRowId="hero-short"
             prevContracts={prevContracts} />
@@ -87,7 +84,8 @@ export default function TickerCard({
       )}
       {long.length > 0 && (
         <TermSection label={TICKER_CARD.long.label}
-          count={long.length} open={longOpen} onToggle={setLongOpen} borderTop>
+          count={long.length} open={open.long}
+          onToggle={v => setOpen(s => ({ ...s, long: v }))} borderTop>
           <OptionsTable puts={long} currentPrice={ticker.current_price}
             heroContract={longHeroContract} heroRowId="hero-long"
             prevContracts={prevContracts} />
@@ -96,7 +94,8 @@ export default function TickerCard({
       {moonshots.length > 0 && (
         <TermSection label={TICKER_CARD.moonshot.label}
           labelCls="text-gold/80" headerCls="bg-gold/5"
-          count={moonshots.length} open={moonshotOpen} onToggle={setMoonshotOpen} borderTop>
+          count={moonshots.length} open={open.moonshot}
+          onToggle={v => setOpen(s => ({ ...s, moonshot: v }))} borderTop>
           <OptionsTable puts={moonshots} currentPrice={ticker.current_price}
             heroContract={moonshotHeroContract} heroRowId="hero-moonshot"
             prevContracts={prevContracts} />

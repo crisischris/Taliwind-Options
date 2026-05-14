@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { METHODOLOGY } from '@/constants/strings'
+import { METHODOLOGY, PUTS_FILTERS_SHEET } from '@/constants/strings'
 
 const DEFAULTS = {
   minGainPct:  500,
@@ -89,7 +89,7 @@ export default function PutsFiltersSheet() {
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          Filters
+          {PUTS_FILTERS_SHEET.triggerLabel}
         </Button>
       </SheetTrigger>
 
@@ -102,8 +102,8 @@ export default function PutsFiltersSheet() {
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2 mb-6">
           <div className="flex items-center gap-2">
             <Crown className="h-4 w-4 text-gold" />
-            <span className="text-sm font-medium">Filters</span>
-            <Badge variant="gold" className="text-[10px] px-1.5 py-0">PREMIUM</Badge>
+            <span className="text-sm font-medium">{PUTS_FILTERS_SHEET.premiumLabel}</span>
+            <Badge variant="gold" className="text-[10px] px-1.5 py-0">{PUTS_FILTERS_SHEET.premiumBadge}</Badge>
           </div>
           <Switch checked={premium} onCheckedChange={setPremium} />
         </div>
@@ -207,9 +207,9 @@ export default function PutsFiltersSheet() {
             </button>
             <div className="flex flex-col items-end gap-1">
               <Button size="sm" disabled>
-                Get Premium
+                {PUTS_FILTERS_SHEET.getPremium}
               </Button>
-              <p className="text-[10px] text-muted-foreground">Premium coming soon</p>
+              <p className="text-[10px] text-muted-foreground">{PUTS_FILTERS_SHEET.comingSoon}</p>
             </div>
           </div>
         )}

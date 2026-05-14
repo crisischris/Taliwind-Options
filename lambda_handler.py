@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from typing import Any
 
 import boto3
 
@@ -16,11 +17,11 @@ _logger = logging.getLogger(__name__)
 
 class _InvocationLogger(logging.LoggerAdapter):
     """Prefixes every log line with the Lambda request ID for CloudWatch querying."""
-    def process(self, msg, kwargs):
+    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:
         return "[%s] %s" % (self.extra["inv_id"], msg), kwargs
 
 
-def handler(event: dict, context) -> dict:
+def handler(event: dict, context: Any) -> dict:
     log = _InvocationLogger(_logger, {"inv_id": context.aws_request_id})
     log.info("Invocation received: %s", json.dumps(event))
 
@@ -47,7 +48,7 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 500, "body": "error"}
 
 
-def _write_report_to_s3(signals: list, s3, bucket_name: str, timestamp: str, log) -> None:
+def _write_report_to_s3(signals: list, s3: Any, bucket_name: str, timestamp: str, log: logging.LoggerAdapter) -> None:
     from indicators.report import _build_report
 
     report_id = f"put-scan-{timestamp}"

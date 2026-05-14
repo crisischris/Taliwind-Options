@@ -2,11 +2,35 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-x-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </div>
-  )
+  ({ className, ...props }, ref) => {
+    const wrapRef = React.useRef<HTMLDivElement>(null)
+    const [showFade, setShowFade] = React.useState(false)
+
+    function update() {
+      const el = wrapRef.current
+      if (!el) return
+      const scrollable = el.scrollWidth > el.clientWidth
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
+      setShowFade(scrollable && !atEnd)
+    }
+
+    React.useEffect(() => {
+      update()
+      window.addEventListener('resize', update)
+      return () => window.removeEventListener('resize', update)
+    }, [])
+
+    return (
+      <div className="relative w-full">
+        <div ref={wrapRef} className="overflow-x-auto" onScroll={update}>
+          <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
+        </div>
+        {showFade && (
+          <div className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none bg-gradient-to-l from-card to-transparent" />
+        )}
+      </div>
+    )
+  }
 )
 Table.displayName = "Table"
 

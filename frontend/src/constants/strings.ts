@@ -8,12 +8,6 @@ export const NAVBAR = {
   about: 'About',
 } as const
 
-export const STATS_BAR = {
-  tickersFlagged: { label: 'Tickers Flagged',    description: '500%+ YTD gainers'          },
-  shortPuts:      { label: 'Short-Dated Puts',   description: 'Under 6 months to expiry'   },
-  longPuts:       { label: 'Long-Dated / LEAPs', description: '6+ months to expiry'        },
-} as const
-
 export const SETTINGS = {
   title:      'Settings',
   appearance: 'Appearance',
@@ -45,14 +39,6 @@ export const OPTIONS_TABLE = {
   ],
 } as const
 
-export const TICKERS_MODAL = {
-  title:        'Tickers Flagged',
-  colTicker:    'Ticker',
-  colYtdGain:   'YTD Gain',
-  colPutsFound: 'Puts Found',
-  close:        'Close',
-} as const
-
 export const HERO_CARD = {
   short:    { label: 'Best Short-Dated',           icon: '⚡' },
   long:     { label: 'Best Long-Dated / LEAP',     icon: '🚀' },
@@ -76,6 +62,14 @@ export const PUTS_PAGE = {
   expandAll:   'Expand All',
   collapseAll: 'Collapse All',
   noNewItems:  'no new items',
+} as const
+
+export const PUTS_FILTERS_SHEET = {
+  triggerLabel: 'Filters',
+  premiumLabel: 'Filters',
+  premiumBadge: 'PREMIUM',
+  getPremium:   'Get Premium',
+  comingSoon:   'Premium coming soon',
 } as const
 
 export const METHODOLOGY = {
