@@ -54,7 +54,7 @@ export default function OptionsTable({ puts, currentPrice, heroContract, heroRow
   })
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={0}>
       <Table className="min-w-[900px]">
         <TableHeader>
           <TableRow className="hover:bg-transparent">

@@ -40,27 +40,34 @@ class GainerPutScanner(Indicator):
     universe: list[str] = field(default_factory=get_universe)
 
     def check(self) -> list[Signal]:
+        # Warm cache for all tickers above the floor so filter changes don't require re-scraping
+        all_gainers = self._find_gainers(config.gainer_cache_floor_pct)
+        if not all_gainers:
+            logger.info("No tickers found with >= %.0f%% gain over past year", config.gainer_cache_floor_pct)
+            return []
+
+        report_gainers = [(t, g) for t, g in all_gainers if g >= config.gainer_min_gain_pct]
+        logger.info(
+            "Cache floor: %d ticker(s) >= %.0f%% | Report threshold: %d ticker(s) >= %.0f%%",
+            len(all_gainers), config.gainer_cache_floor_pct,
+            len(report_gainers), config.gainer_min_gain_pct,
+        )
+
         signals: list[Signal] = []
-
-        gainers = self._find_gainers()
-        if not gainers:
-            logger.info("No tickers found with >= %.0f%% gain over past year", config.gainer_min_gain_pct)
-            return signals
-
-        logger.info("Found %d gainer(s): %s", len(gainers), [t for t, _ in gainers])
-
-        for ticker, gain_pct in gainers:
+        for ticker, gain_pct in all_gainers:
             try:
                 current_price = self._fetch_price(ticker)
                 if not current_price:
                     continue
-                signals.extend(self._scan_puts(ticker, gain_pct, current_price))
+                puts = self._scan_puts(ticker, gain_pct, current_price)
+                if gain_pct >= config.gainer_min_gain_pct:
+                    signals.extend(puts)
             except Exception as e:
                 logger.error("Error scanning puts for %s: %s", ticker, e)
 
         return signals
 
-    def _find_gainers(self) -> list[tuple[str, float]]:
+    def _find_gainers(self, threshold_pct: float) -> list[tuple[str, float]]:
         cached = cache.get("history_1y")
         if cached is not None:
             logger.info("Using cached 1-year history")
@@ -83,7 +90,7 @@ class GainerPutScanner(Indicator):
             cache.set("history_1y", closes)
 
         gainers: list[tuple[str, float]] = []
-        threshold = config.gainer_min_gain_pct / 100.0
+        threshold = threshold_pct / 100.0
 
         for ticker in closes.columns:
             series = closes[ticker].dropna()

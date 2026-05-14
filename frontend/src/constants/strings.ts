@@ -69,7 +69,7 @@ export const HERO_CARD = {
 } as const
 
 export const PUTS_PAGE = {
-  title:       'Put Scan Reports',
+  title:       'Put Report',
   loading:     'Loading…',
   empty:       'No reports found — run the scanner to generate one.',
   newOnly:     'New Only',
@@ -79,7 +79,7 @@ export const PUTS_PAGE = {
 } as const
 
 export const METHODOLOGY = {
-  trigger: 'How is this report generated?',
+  trigger: 'How are these puts selected?',
   thesis: {
     heading: 'The Thesis',
     body: 'Stocks with 500%+ YTD gains tend to mean-revert. The move may be fundamental, but the options market regularly underprices downside risk on extreme gainers. This scanner finds those names and surfaces cheap out-of-the-money puts on them. The setup is asymmetric. Small premium at risk, large payoff if the correction plays out.',

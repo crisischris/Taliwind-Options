@@ -18,25 +18,25 @@ export default function MethodologyDisclosure() {
       </div>
 
       <CollapsibleContent>
-        <div className="px-5 pb-5 pt-1 space-y-5 border-t border-border">
+        <div className="px-5 pb-6 pt-4 space-y-8 border-t border-border">
 
           <section>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
               {METHODOLOGY.thesis.heading}
             </h3>
             <p className="text-sm leading-relaxed">{METHODOLOGY.thesis.body}</p>
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
               {METHODOLOGY.judgementCalls.heading}
             </h3>
-            <p className="text-xs text-muted-foreground mb-3">{METHODOLOGY.judgementCalls.intro}</p>
-            <ul className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-4">{METHODOLOGY.judgementCalls.intro}</p>
+            <ul className="space-y-4">
               {METHODOLOGY.judgementCalls.rules.map(({ rule, detail }) => (
-                <li key={rule} className="flex gap-3 text-sm">
-                  <span className="font-semibold shrink-0 text-foreground">{rule}</span>
-                  <span className="text-muted-foreground leading-relaxed">{detail}</span>
+                <li key={rule}>
+                  <p className="text-sm font-semibold mb-0.5">{rule}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{detail}</p>
                 </li>
               ))}
             </ul>

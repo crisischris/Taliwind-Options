@@ -20,12 +20,13 @@ interface Props {
   moonshotHeroContract: string
   prevContracts: Set<string>
   prevTickers: Set<string>
+  newOnly?: boolean
   expansionOverride?: ExpansionOverride | null
 }
 
 export default function TickerCard({
   ticker, shortHeroContract, longHeroContract, moonshotHeroContract,
-  prevContracts, prevTickers, expansionOverride,
+  prevContracts, prevTickers, newOnly, expansionOverride,
 }: Props) {
   const [shortOpen, setShortOpen]       = useState(true)
   const [longOpen, setLongOpen]         = useState(true)
@@ -38,9 +39,12 @@ export default function TickerCard({
     setMoonshotOpen(expansionOverride.open)
   }, [expansionOverride])
 
-  const short     = ticker.puts.filter(p => p.term === 'short')
-  const long      = ticker.puts.filter(p => p.term === 'long')
-  const moonshots = ticker.puts.filter(p => p.term === 'moonshot')
+  const isNew = (p: { contract: string }) =>
+    !newOnly || prevContracts.size === 0 || !prevContracts.has(p.contract)
+
+  const short     = ticker.puts.filter(p => p.term === 'short'    && isNew(p))
+  const long      = ticker.puts.filter(p => p.term === 'long'     && isNew(p))
+  const moonshots = ticker.puts.filter(p => p.term === 'moonshot' && isNew(p))
 
   const isNewTicker = prevTickers.size > 0 && !prevTickers.has(ticker.ticker)
   const newPutCount = prevContracts.size > 0

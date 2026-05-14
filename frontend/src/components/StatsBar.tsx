@@ -1,6 +1,7 @@
 import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import type { Summary } from "@/types/report"
 import { STATS_BAR } from "@/constants/strings"
 
@@ -37,9 +38,16 @@ export default function StatsBar({ summary, onShowTickers }: Props) {
         value={summary.tickers_flagged}
         description={STATS_BAR.tickersFlagged.description}
         action={
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onShowTickers}>
-            <Info className="h-4 w-4" />
-          </Button>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onShowTickers}>
+                  <Info className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Click to see flagged tickers</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         }
       />
       <Stat label={STATS_BAR.shortPuts.label} value={summary.short_puts}  description={STATS_BAR.shortPuts.description} />

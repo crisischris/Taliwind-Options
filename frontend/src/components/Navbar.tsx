@@ -32,6 +32,7 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
               {label}
             </Button>
           ))}
+          <span className="w-px h-5 bg-border mx-1" />
           <Button variant="ghost" size="icon" onClick={onOpenSettings} aria-label="Settings">
             <Settings className="h-4 w-4" />
           </Button>
@@ -40,5 +41,7 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
     </header>
   )
 }
+
+export type { Page }
 
 export type { Page }

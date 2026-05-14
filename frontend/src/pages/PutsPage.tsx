@@ -1,21 +1,28 @@
 import { useState, useEffect, useCallback } from 'react'
+
+// Parses "2026-05-09_18-59" → "May 9, 2026 at 6:59 PM"
+function formatTimestamp(raw: string): string {
+  const [datePart, timePart] = raw.split('_')
+  if (!datePart || !timePart) return raw
+  const [h, m] = timePart.split('-').map(Number)
+  const date = new Date(`${datePart}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`)
+  if (isNaN(date.getTime())) return raw
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
 import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { HERO_CARD, PUTS_PAGE } from '@/constants/strings'
-import StatsBar from '@/components/StatsBar'
-import MethodologyDisclosure from '@/components/MethodologyDisclosure'
+import PutsFiltersSheet from '@/components/PutsFiltersSheet'
 import HeroCard from '@/components/HeroCard'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
-import TickersModal from '@/components/TickersModal'
 
 export default function PutsPage() {
   const { manifest, error } = useManifest()
   const [selectedId, setSelectedId]         = useState<string | null>(null)
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
   const [newOnly, setNewOnly]               = useState(false)
-  const [showModal, setShowModal]           = useState(false)
   const [expansion, setExpansion]           = useState<ExpansionOverride | null>(null)
 
   useEffect(() => {
@@ -113,7 +120,7 @@ export default function PutsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{PUTS_PAGE.title}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {report ? `Generated ${report.generated_at.replace('_', ' at ')}` : PUTS_PAGE.loading}
+              {report ? `Generated ${formatTimestamp(report.generated_at)}` : PUTS_PAGE.loading}
             </p>
           </div>
           <div className="flex flex-col gap-1 w-full sm:w-80 shrink-0">
@@ -127,7 +134,7 @@ export default function PutsPage() {
             >
               {manifest.map(r => (
                 <option key={r.id} value={r.id}>
-                  {r.generated_at.replace('_', ' at ')} — {r.tickers_flagged} tickers, {(r.short_puts ?? 0) + (r.long_puts ?? 0)} puts
+                  {formatTimestamp(r.generated_at)} — {r.tickers_flagged} tickers, {(r.short_puts ?? 0) + (r.long_puts ?? 0)} puts
                 </option>
               ))}
             </select>
@@ -160,9 +167,6 @@ export default function PutsPage() {
 
         {report && (
           <>
-            <MethodologyDisclosure />
-            <StatsBar summary={report.summary} onShowTickers={() => setShowModal(true)} />
-
             {/* Hero cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <HeroCard put={report.heroes.short}    label={HERO_CARD.short.label}    icon={HERO_CARD.short.icon}    heroRowId="hero-short"    onScrollTo={scrollToHero} />
@@ -172,6 +176,7 @@ export default function PutsPage() {
 
             {/* Toolbar */}
             <div className="flex justify-end gap-2 mb-0">
+              <PutsFiltersSheet />
               {hasNewItems && diff.prevContracts.size > 0 && (
                 <Button variant={newOnly ? 'secondary' : 'outline'} size="sm"
                   onClick={() => setNewOnly(v => !v)}>
@@ -230,12 +235,14 @@ export default function PutsPage() {
             {/* Active ticker detail */}
             {activeTicker && (
               <TickerCard
+                key={activeTicker.ticker}
                 ticker={activeTicker}
                 shortHeroContract={shortHero}
                 longHeroContract={longHero}
                 moonshotHeroContract={moonshotHero}
                 prevContracts={diff.prevContracts}
                 prevTickers={diff.prevTickers}
+                newOnly={newOnly}
                 expansionOverride={expansion}
               />
             )}
@@ -243,9 +250,6 @@ export default function PutsPage() {
         )}
       </div>
 
-      {showModal && report && (
-        <TickersModal tickers={report.tickers} onClose={() => setShowModal(false)} />
-      )}
     </div>
   )
 }

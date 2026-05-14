@@ -4,6 +4,7 @@ import SettingsModal, { type Theme } from './components/SettingsModal'
 import PutsPage from './pages/PutsPage'
 import CallsPage from './pages/CallsPage'
 import AboutPage from './pages/AboutPage'
+import Footer from './components/Footer'
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme')
@@ -27,11 +28,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar current={page} onChange={setPage} onOpenSettings={() => setSettings(true)} />
-      {page === 'puts'  && <PutsPage />}
-      {page === 'calls' && <CallsPage />}
-      {page === 'about' && <AboutPage />}
+      <main className="flex-1">
+        {page === 'puts'  && <PutsPage />}
+        {page === 'calls' && <CallsPage />}
+        {page === 'about' && <AboutPage />}
+      </main>
+      <Footer />
       {showSettings && (
         <SettingsModal theme={theme} onToggle={toggleTheme} onClose={() => setSettings(false)} />
       )}
