@@ -48,10 +48,10 @@ jobs:
         run: cdk deploy -c stage=beta --require-approval never --ci
 
       - name: Integration tests (beta)
+        timeout-minutes: 15
         run: |
-          # TODO: replace with real integration test runner once tests exist
-          # Example: invoke the beta Lambda and assert a successful response
-          echo "No integration tests yet — skipping"
+          pip install boto3 httpx pytest
+          pytest tests/integration/ -v --override-ini="addopts=" --tb=short
 
       # ── Prod ────────────────────────────────────────────────────────────────
 

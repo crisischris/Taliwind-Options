@@ -15,10 +15,14 @@ signals = [s for s in GainerPutScanner().check() if s.triggered]
 print(f'{len(signals)} signals found')
 "
 
-# Python: lint + tests (run both before pushing)
+# Python: lint + unit tests (run both before pushing)
 ruff check .
 ruff format .
 python -m pytest tests/
+
+# Integration tests (require deployed beta + AWS credentials)
+pip install boto3 httpx pytest
+pytest tests/integration/ -v --override-ini="addopts=" --tb=short
 
 # Frontend: full CI check — type-check, lint, and tests (run before pushing)
 cd frontend && npm run ci
