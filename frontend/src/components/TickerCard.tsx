@@ -32,6 +32,7 @@ export default function TickerCard({
 
   useEffect(() => {
     if (expansionOverride == null) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen({ short: expansionOverride.open, long: expansionOverride.open, moonshot: expansionOverride.open })
   }, [expansionOverride])
 

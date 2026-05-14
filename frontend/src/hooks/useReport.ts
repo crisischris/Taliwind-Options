@@ -30,6 +30,7 @@ export function useReport(id: string | null, manifest: ManifestEntry[]) {
 
   useEffect(() => {
     if (!id) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
 
     const idx = manifest.findIndex(m => m.id === id)

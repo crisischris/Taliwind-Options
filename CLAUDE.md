@@ -15,9 +15,13 @@ signals = [s for s in GainerPutScanner().check() if s.triggered]
 print(f'{len(signals)} signals found')
 "
 
-# Lint Python
+# Python: lint + tests (run both before pushing)
 ruff check .
 ruff format .
+python -m pytest tests/
+
+# Frontend: full CI check — type-check, lint, and tests (run before pushing)
+cd frontend && npm run ci
 
 # Run the React dev server (proxies JSON reports from the Python server)
 # Terminal 1: python -m http.server 8765 --directory reports/

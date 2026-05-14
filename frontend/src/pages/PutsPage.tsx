@@ -20,6 +20,7 @@ export default function PutsPage() {
     if (!manifest.length) return
     const hashId = location.hash.slice(1)
     const target = manifest.find(m => m.id === hashId)?.id ?? manifest[0]?.id ?? null
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedId(target)
   }, [manifest])
 
@@ -32,7 +33,7 @@ export default function PutsPage() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [manifest])
 
-  // Reset ticker selection when report changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setSelectedTicker(null) }, [selectedId])
 
   function selectReport(id: string) {
@@ -82,6 +83,7 @@ export default function PutsPage() {
   // Sync selectedTicker state whenever activeTicker resolves differently
   useEffect(() => {
     if (activeTicker && activeTicker.ticker !== selectedTicker) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedTicker(activeTicker.ticker)
     }
   }, [activeTicker, selectedTicker])
