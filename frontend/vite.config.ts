@@ -13,4 +13,15 @@ export default defineConfig({
       '/put-scan-': { target: 'http://localhost:8765', rewrite: p => p },
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/utils/**', 'src/hooks/**'],
+      thresholds: { lines: 90, branches: 90 },
+    },
+  },
 })
