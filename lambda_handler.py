@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def handler(event: dict, context) -> dict:
+    logger.info("Invocation received: %s", json.dumps(event))
 
     from indicators.sources.gainer_puts import GainerPutScanner
 
