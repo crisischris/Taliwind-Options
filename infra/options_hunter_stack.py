@@ -1,10 +1,10 @@
 import aws_cdk as cdk
 from aws_cdk import (
-    aws_events as events,
-    aws_events_targets as targets,
+    aws_iam as iam,
     aws_lambda as lambda_,
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
+    aws_scheduler as scheduler,
 )
 from constructs import Construct
 
@@ -66,6 +66,7 @@ class OptionsHunterStack(cdk.Stack):
             environment={
                 "REPORTS_BUCKET": bucket.bucket_name,
                 "GAINER_MIN_GAIN_PCT": "500",
+                "GAINER_CACHE_FLOOR_PCT": "100",
                 "GAINER_PUT_MAX_COST_PCT": "0.05",
                 "GAINER_PUT_MAX_IV": "2.00",
                 "GAINER_PUT_MIN_OI": "10",
@@ -77,24 +78,30 @@ class OptionsHunterStack(cdk.Stack):
         bucket.grant_put(scanner_fn)
         bucket.grant_read(scanner_fn)
 
-        # ── EventBridge: twice-daily cron ────────────────────────────────────
-        # 14:35 UTC = 9:35 AM EST / 10:35 AM EDT  (near open)
-        # 17:00 UTC = 12:00 PM EST / 1:00 PM EDT  (midday)
+        # ── EventBridge Scheduler: 9:31 AM ET weekdays ───────────────────────
+        # Uses EventBridge Scheduler (not legacy Rules) for native DST-aware
+        # timezone support — fires at exactly 9:31 AM ET year-round.
 
-        for rule_id, hour, minute in [
-            ("OpenScanRule",  "14", "35"),
-            ("MidayScanRule", "17", "0"),
-        ]:
-            events.Rule(
-                self,
-                rule_id,
-                schedule=events.Schedule.cron(
-                    minute=minute,
-                    hour=hour,
-                    week_day="MON-FRI",
-                ),
-                targets=[targets.LambdaFunction(scanner_fn)],
-            )
+        scheduler_role = iam.Role(
+            self,
+            "SchedulerRole",
+            assumed_by=iam.ServicePrincipal("scheduler.amazonaws.com"),
+        )
+        scanner_fn.grant_invoke(scheduler_role)
+
+        scheduler.CfnSchedule(
+            self,
+            "OpenScanSchedule",
+            schedule_expression="cron(31 9 ? * MON-FRI *)",
+            schedule_expression_timezone="America/New_York",
+            flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                mode="OFF",
+            ),
+            target=scheduler.CfnSchedule.TargetProperty(
+                arn=scanner_fn.function_arn,
+                role_arn=scheduler_role.role_arn,
+            ),
+        )
 
         # ── Outputs ───────────────────────────────────────────────────────────
 
