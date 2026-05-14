@@ -47,8 +47,10 @@ jobs:
       - name: Deploy beta
         run: cdk deploy -c stage=beta --require-approval never --ci
 
-      - name: Integration tests (beta)
+      - name: Integration tests
         timeout-minutes: 15
+        env:
+          INTEG_STAGE: beta
         run: |
           pip install boto3 httpx pytest
           pytest tests/integration/ -v --override-ini="addopts=" --tb=short
