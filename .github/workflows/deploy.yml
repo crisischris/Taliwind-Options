@@ -52,7 +52,7 @@ jobs:
         env:
           INTEG_STAGE: beta
         run: |
-          pip install boto3 httpx pytest
+          pip install -e . boto3 pytest
           pytest tests/integration/ -v --override-ini="addopts=" --tb=short
 
       # ── Prod ────────────────────────────────────────────────────────────────

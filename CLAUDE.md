@@ -21,7 +21,7 @@ ruff format .
 python -m pytest tests/
 
 # Integration tests (require deployed beta + AWS credentials)
-pip install boto3 httpx pytest
+pip install -e . boto3 pytest
 pytest tests/integration/ -v --override-ini="addopts=" --tb=short
 
 # Frontend: full CI check — type-check, lint, and tests (run before pushing)
