@@ -9,6 +9,9 @@ dependencies = [
     "lxml>=4.9",
 ]
 
+[tool.setuptools.packages.find]
+include = ["indicators*"]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
