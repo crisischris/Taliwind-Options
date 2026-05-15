@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import json
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 
 import indicators.cache as cache_mod
 from indicators import cache
-from indicators.ark_holdings import _fetch_from_ark, get_tickers
+from indicators.ark_holdings import _fetch_from_yf, get_tickers
 
 
 @pytest.fixture(autouse=True)
@@ -16,16 +16,14 @@ def clear_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(cache_mod, "_CACHE_DIR", tmp_path)
 
 
-def _mock_urlopen(csv_text: str):
-    """Return a context-manager mock that yields a readable HTTP response."""
-    resp = MagicMock()
-    resp.read.return_value = csv_text.encode("utf-8")
-    resp.__enter__ = lambda s: s
-    resp.__exit__ = MagicMock(return_value=False)
-    return resp
+def _mock_holdings(symbols: list[str]) -> pd.DataFrame:
+    return pd.DataFrame({"holdingPercent": [0.05] * len(symbols)}, index=pd.Index(symbols, name="symbol"))
 
 
-_SAMPLE_CSV = "date,fund,company,ticker,cusip,shares,market value ($),weight (%)\n2026-01-01,ARKK,Apple Inc,AAPL,123,100,20000,5.0\n2026-01-01,ARKK,Tesla Inc,TSLA,456,50,10000,2.5\n"
+def _mock_ticker(symbols: list[str]) -> MagicMock:
+    t = MagicMock()
+    t.funds_data.top_holdings = _mock_holdings(symbols)
+    return t
 
 
 # ── get_tickers ───────────────────────────────────────────────────────────────
@@ -47,12 +45,11 @@ def test_get_tickers_s3_cache_hit():
     mock_s3.get_object.assert_called_once()
 
 
-def test_get_tickers_s3_miss_fetches_from_ark():
+def test_get_tickers_s3_miss_fetches_from_yf():
     mock_s3 = MagicMock()
     mock_s3.get_object.side_effect = Exception("NoSuchKey")
 
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL", "TSLA"])):
         result = get_tickers(s3=mock_s3, bucket="my-bucket")
 
     assert "AAPL" in result
@@ -63,8 +60,7 @@ def test_get_tickers_s3_miss_writes_back_to_s3():
     mock_s3 = MagicMock()
     mock_s3.get_object.side_effect = Exception("NoSuchKey")
 
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL", "TSLA"])):
         get_tickers(s3=mock_s3, bucket="my-bucket")
 
     mock_s3.put_object.assert_called_once()
@@ -72,12 +68,9 @@ def test_get_tickers_s3_miss_writes_back_to_s3():
     assert "AAPL" in body
 
 
-def test_get_tickers_no_s3_falls_through_to_ark():
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
+def test_get_tickers_no_s3_falls_through_to_yf():
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL"])):
         result = get_tickers()
-
-    assert isinstance(result, list)
     assert "AAPL" in result
 
 
@@ -86,47 +79,45 @@ def test_get_tickers_s3_write_failure_is_swallowed():
     mock_s3.get_object.side_effect = Exception("miss")
     mock_s3.put_object.side_effect = Exception("write failed")
 
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL"])):
         result = get_tickers(s3=mock_s3, bucket="my-bucket")
 
     assert isinstance(result, list)
 
 
-# ── _fetch_from_ark ───────────────────────────────────────────────────────────
+# ── _fetch_from_yf ────────────────────────────────────────────────────────────
 
-def test_fetch_from_ark_parses_ticker_column():
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
-        result = _fetch_from_ark()
+def test_fetch_from_yf_returns_tickers():
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL", "TSLA"])):
+        result = _fetch_from_yf()
     assert "AAPL" in result
     assert "TSLA" in result
 
 
-def test_fetch_from_ark_deduplicates_across_etfs():
-    # Both ETFs hold AAPL — should appear only once
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
-        result = _fetch_from_ark()
+def test_fetch_from_yf_deduplicates_across_etfs():
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["AAPL"])):
+        result = _fetch_from_yf()
     assert result.count("AAPL") == 1
 
 
-def test_fetch_from_ark_skips_dash_tickers():
-    csv = "ticker\n-\nTSLA\n"
-    resp = _mock_urlopen(csv)
-    with patch("urllib.request.urlopen", return_value=resp):
-        result = _fetch_from_ark()
-    assert "-" not in result
-
-
-def test_fetch_from_ark_returns_sorted():
-    resp = _mock_urlopen(_SAMPLE_CSV)
-    with patch("urllib.request.urlopen", return_value=resp):
-        result = _fetch_from_ark()
+def test_fetch_from_yf_returns_sorted():
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["TSLA", "AAPL", "NVDA"])):
+        result = _fetch_from_yf()
     assert result == sorted(result)
 
 
-def test_fetch_from_ark_network_error_returns_empty():
-    with patch("urllib.request.urlopen", side_effect=Exception("network error")):
-        result = _fetch_from_ark()
+def test_fetch_from_yf_etf_error_returns_empty():
+    mock_ticker = MagicMock()
+    mock_ticker.funds_data.top_holdings = pd.DataFrame()  # empty
+    mock_ticker.funds_data.top_holdings.index = pd.Index([])
+    with patch("indicators.ark_holdings.yf.Ticker", side_effect=Exception("network error")):
+        result = _fetch_from_yf()
     assert result == []
+
+
+def test_fetch_from_yf_skips_invalid_symbols():
+    with patch("indicators.ark_holdings.yf.Ticker", return_value=_mock_ticker(["-", "nan", "TSLA"])):
+        result = _fetch_from_yf()
+    assert "-" not in result
+    assert "nan" not in result
+    assert "TSLA" in result
