@@ -1,10 +1,9 @@
-export const APP = {
-  brand: '📈 Options Hunter',
-} as const
+export const APP_NAME = 'Options Hunter'
 
 export const NAVBAR = {
-  puts:  'Puts',
+  home:  'Home',
   calls: 'Calls',
+  puts:  'Puts',
   about: 'About',
 } as const
 
@@ -76,14 +75,14 @@ export const METHODOLOGY = {
   trigger: 'How are these puts selected?',
   thesis: {
     heading: 'The Thesis',
-    body: 'Stocks with 500%+ YTD gains tend to mean-revert. The move may be fundamental, but the options market regularly underprices downside risk on extreme gainers. This scanner finds those names and surfaces cheap out-of-the-money puts on them. The setup is asymmetric. Small premium at risk, large payoff if the correction plays out.',
+    body: 'Stocks with 500%+ trailing 12-month gains tend to mean-revert. The move may be fundamental, but the options market regularly underprices downside risk on extreme gainers. This scanner finds those names and surfaces cheap out-of-the-money puts on them. The setup is asymmetric. Small premium at risk, large payoff if the correction plays out.',
   },
   judgementCalls: {
     heading: 'Judgement Calls',
     intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
     rules: [
       { rule: 'Universe', detail: 'S&P 500 and NASDAQ 100 constituents only — liquid, well-known names where options markets are active.' },
-      { rule: '500%+ YTD gain', detail: 'The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker.' },
+      { rule: '500%+ over 1 year', detail: 'The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker.' },
       { rule: 'Out-of-the-money puts only', detail: 'We want cheap optionality on a correction, not intrinsic value. ITM puts are excluded.' },
       { rule: 'Expiry between 60 and 1,000 DTE', detail: 'Too short and there is no time for the thesis to play out. Too long and pricing becomes speculative. The sweet spot is roughly 2 months to 3 years out.' },
       { rule: 'Ask ≤ 5% of stock price', detail: 'Keeps the cost-of-insurance sensible. A put that costs more than 5% of the underlying is already pricing in meaningful downside.' },
@@ -95,9 +94,19 @@ export const METHODOLOGY = {
   },
 } as const
 
+export const HOME_PAGE = {
+  subtitle:    'Daily scans for asymmetric options plays — extreme gainers ripe for puts, momentum names primed for calls.',
+  putsHeading: 'Top Put Plays Identified',
+  callsHeading: 'Top Call Plays Identified',
+  viewAll:     'View all →',
+  loading:    'Loading…',
+  putsEmpty:  'No put reports found.',
+  callsEmpty: 'No call reports found.',
+} as const
+
 export const ABOUT_PAGE = {
   title: 'About',
-  body1: 'Options Hunter is a daily scanner that finds S&P 500 and NASDAQ 100 stocks with extreme YTD gains and surfaces cheap out-of-the-money puts as potential mean-reversion plays.',
+  body1: `${APP_NAME} is a daily scanner that finds S&P 500 and NASDAQ 100 stocks with extreme trailing 12-month gains and surfaces cheap out-of-the-money puts as potential mean-reversion plays.`,
   body2: 'Scans run twice daily at market open and midday. Reports are stored and compared across runs to highlight new opportunities.',
 } as const
 

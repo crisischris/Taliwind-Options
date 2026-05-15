@@ -126,13 +126,13 @@ export default function PutsFiltersSheet() {
               {/* Universe — fixed */}
               <FixedRule rule="Universe" detail="S&P 500 and NASDAQ 100 constituents only — liquid, well-known names where options markets are active." />
 
-              {/* YTD gain — editable */}
+              {/* Trailing 12-month gain — editable */}
               {premium ? (
-                <EditableRule rule="Minimum YTD gain" detail="Stocks must have gained at least this much over the trailing 12 months. Lower = more tickers, weaker mean-reversion thesis.">
+                <EditableRule rule="Minimum 1-year gain" detail="Stocks must have gained at least this much over the trailing 12 months. Lower = more tickers, weaker mean-reversion thesis.">
                   <NumberInput value={filters.minGainPct} onChange={v => set('minGainPct', v)} min={50} max={10000} unit="%" />
                 </EditableRule>
               ) : (
-                <FixedRule rule="500%+ YTD gain" detail="The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker." />
+                <FixedRule rule="500%+ over 1 year" detail="The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker." />
               )}
 
               {/* OTM only — fixed */}

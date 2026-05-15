@@ -210,7 +210,7 @@ export default function PutsPage() {
                       >
                         {t.ticker}
                         <span className={cn("text-xs font-normal", t.gain_pct >= 0 ? "text-gain" : "text-loss")}>
-                          {t.gain_pct >= 0 ? '+' : ''}{Math.round(t.gain_pct)}%
+                          {t.gain_pct >= 0 ? '+' : ''}{Math.round(t.gain_pct)}% (1Y)
                         </span>
                         {isNewTicker && (
                           <Badge variant="success" className="text-[9px] py-0 px-1 h-4 leading-none">NEW</Badge>

@@ -206,7 +206,7 @@ export default function CallsPage() {
                       >
                         {t.ticker}
                         <span className="text-xs font-normal text-gain">
-                          +{Math.round(t.momentum_pct)}%
+                          +{Math.round(t.momentum_pct)}% (90d)
                         </span>
                         {isNewTicker && (
                           <Badge variant="success" className="text-[9px] py-0 px-1 h-4 leading-none">NEW</Badge>

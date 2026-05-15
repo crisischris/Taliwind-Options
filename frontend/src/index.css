@@ -4,21 +4,21 @@
 
 @layer base {
   :root {
-    --background:   0 0% 96%;
-    --foreground:   222 47% 11%;
+    --background:   252 40% 97%;    /* near-white with violet tint */
+    --foreground:   252 40% 8%;     /* near-black with violet tint */
     --card:         0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --border:       214 32% 85%;
-    --input:        214 32% 85%;
-    --ring:         222 47% 11%;
-    --primary:      222 47% 11%;
-    --primary-foreground: 0 0% 98%;
-    --secondary:    210 40% 94%;
-    --secondary-foreground: 222 47% 11%;
-    --muted:        210 40% 94%;
-    --muted-foreground: 215 16% 47%;
-    --accent:       210 40% 94%;
-    --accent-foreground: 222 47% 11%;
+    --card-foreground: 252 40% 8%;
+    --border:       252 30% 87%;
+    --input:        252 30% 87%;
+    --ring:         252 100% 64%;   /* #6c47ff */
+    --primary:      252 100% 64%;   /* #6c47ff */
+    --primary-foreground: 0 0% 100%;
+    --secondary:    252 60% 93%;    /* light lavender for active states */
+    --secondary-foreground: 252 40% 20%;
+    --muted:        252 40% 94%;
+    --muted-foreground: 252 15% 46%;
+    --accent:       252 60% 93%;
+    --accent-foreground: 252 40% 20%;
     --destructive:  0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --radius: 0.5rem;
@@ -26,34 +26,34 @@
     /* scanner signal colors */
     --gain:    142 71% 35%;
     --loss:    0 84% 50%;
-    --caution: 38 92% 40%;
-    --gold:    38 92% 40%;
+    --caution: 35 90% 45%;          /* amber, slightly darkened for light bg legibility */
+    --gold:    35 90% 45%;
   }
 
   .dark {
-    --background:   222 47% 11%;
-    --foreground:   213 31% 91%;
-    --card:         222 47% 14%;
-    --card-foreground: 213 31% 91%;
-    --border:       216 34% 22%;
-    --input:        216 34% 22%;
-    --ring:         213 31% 91%;
-    --primary:      213 31% 91%;
-    --primary-foreground: 222 47% 11%;
-    --secondary:    222 47% 18%;
-    --secondary-foreground: 213 31% 91%;
-    --muted:        222 47% 18%;
-    --muted-foreground: 215 20% 65%;
-    --accent:       222 47% 18%;
-    --accent-foreground: 213 31% 91%;
+    --background:   252 30% 6%;     /* near-black with violet character */
+    --foreground:   252 15% 92%;    /* near-white */
+    --card:         252 25% 11%;    /* dark violet card */
+    --card-foreground: 252 15% 92%;
+    --border:       252 22% 20%;
+    --input:        252 22% 20%;
+    --ring:         252 100% 64%;   /* #6c47ff */
+    --primary:      252 100% 64%;   /* #6c47ff */
+    --primary-foreground: 0 0% 100%;
+    --secondary:    252 25% 18%;
+    --secondary-foreground: 252 15% 92%;
+    --muted:        252 25% 18%;
+    --muted-foreground: 252 15% 58%;
+    --accent:       252 25% 18%;
+    --accent-foreground: 252 15% 92%;
     --destructive:  0 63% 55%;
-    --destructive-foreground: 213 31% 91%;
+    --destructive-foreground: 252 15% 92%;
 
     /* scanner signal colors — brighter in dark mode */
     --gain:    142 71% 45%;
     --loss:    0 84% 60%;
-    --caution: 38 92% 50%;
-    --gold:    38 92% 55%;
+    --caution: 35 100% 64%;         /* #ffb347 exactly */
+    --gold:    35 100% 64%;         /* #ffb347 exactly */
   }
 }
 

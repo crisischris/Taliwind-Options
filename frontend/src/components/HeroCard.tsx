@@ -35,7 +35,7 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
         <div className="flex flex-wrap items-baseline gap-4 mb-4">
           <span className="text-gold text-5xl font-black tracking-tight">{put.ticker}</span>
           <Badge variant="gold" className="text-sm font-semibold">
-            +{Math.round(put.gain_pct)}% YTD
+            +{Math.round(put.gain_pct)}% (1Y)
           </Badge>
           <span className="text-muted-foreground text-sm">@ ${put.current_price.toFixed(2)}</span>
         </div>
