@@ -10,12 +10,11 @@ import pytest
 import indicators.cache as cache_mod
 from indicators import cache
 from indicators.sources.gainer_puts import (
+    _TERM_BOUNDARY_DAYS,
     GainerPutScanner,
     _norm_cdf,
     _prob_itm_put,
-    _TERM_BOUNDARY_DAYS,
 )
-
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
 

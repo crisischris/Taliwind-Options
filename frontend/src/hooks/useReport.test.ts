@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useManifest, useReport } from './useReport'
-import type { ManifestEntry, Report } from '../types/report'
+import { useManifest, usePutsReport } from './useReport'
+import type { ManifestEntry, PutsReport } from '../types/report'
 
 // ── test data ─────────────────────────────────────────────────────────────────
 
@@ -10,10 +10,10 @@ const MANIFEST: ManifestEntry[] = [
   { id: 'put-scan-2026-05-13_09-31', generated_at: '2026-05-13_09-31', tickers_flagged: 2, short_puts: 8, long_puts: 4 },
 ]
 
-const REPORT: Report = {
+const REPORT: PutsReport = {
   id: 'put-scan-2026-05-14_09-31',
   generated_at: '2026-05-14_09-31',
-  summary: { tickers_flagged: 3, short_puts: 10, long_puts: 5 },
+  summary: { tickers_flagged: 3, short_puts: 10, long_puts: 5, moonshot_puts: 0 },
   heroes: { short: null, long: null, moonshot: null },
   tickers: [
     {
@@ -40,7 +40,7 @@ const REPORT: Report = {
   ],
 }
 
-const PREV_REPORT: Report = {
+const PREV_REPORT: PutsReport = {
   ...REPORT,
   id: 'put-scan-2026-05-13_09-31',
   generated_at: '2026-05-13_09-31',
@@ -90,8 +90,8 @@ describe('useManifest', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('returns manifest on success', async () => {
-    mockFetch({ 'manifest.json': MANIFEST })
-    const { result } = renderHook(() => useManifest())
+    mockFetch({ 'puts/manifest.json': MANIFEST })
+    const { result } = renderHook(() => useManifest('puts'))
     await waitFor(() => expect(result.current.manifest).toHaveLength(2))
     expect(result.current.error).toBe(false)
     expect(result.current.manifest[0].id).toBe('put-scan-2026-05-14_09-31')
@@ -99,7 +99,7 @@ describe('useManifest', () => {
 
   it('sets error on fetch failure', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network error'))))
-    const { result } = renderHook(() => useManifest())
+    const { result } = renderHook(() => useManifest('puts'))
     await waitFor(() => expect(result.current.error).toBe(true))
     expect(result.current.manifest).toHaveLength(0)
   })
@@ -109,26 +109,26 @@ describe('useManifest', () => {
       ok: false,
       json: () => Promise.reject(new Error('bad json')),
     })))
-    const { result } = renderHook(() => useManifest())
+    const { result } = renderHook(() => useManifest('puts'))
     await waitFor(() => expect(result.current.error).toBe(true))
   })
 
   it('starts with empty manifest', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))) // never resolves
-    const { result } = renderHook(() => useManifest())
+    const { result } = renderHook(() => useManifest('puts'))
     expect(result.current.manifest).toHaveLength(0)
     expect(result.current.error).toBe(false)
   })
 })
 
-// ── useReport ─────────────────────────────────────────────────────────────────
+// ── usePutsReport ─────────────────────────────────────────────────────────────
 
-describe('useReport', () => {
+describe('usePutsReport', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('does nothing when id is null', async () => {
     vi.stubGlobal('fetch', vi.fn())
-    const { result } = renderHook(() => useReport(null, MANIFEST))
+    const { result } = renderHook(() => usePutsReport(null, MANIFEST))
     await act(async () => {})
     expect(result.current.report).toBeNull()
     expect(vi.mocked(fetch)).not.toHaveBeenCalled()
@@ -139,25 +139,25 @@ describe('useReport', () => {
       'put-scan-2026-05-14_09-31.json': REPORT,
       'put-scan-2026-05-13_09-31.json': PREV_REPORT,
     })
-    const { result } = renderHook(() => useReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
     await waitFor(() => expect(result.current.report).not.toBeNull())
 
     expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31')
     expect(result.current.diff.prevReportId).toBe('put-scan-2026-05-13_09-31')
-    expect(result.current.diff.prevTickers.has('MSFT')).toBe(true)
-    expect(result.current.diff.prevContracts.has('MSFT261219P00250000')).toBe(true)
+    expect(result.current.diff.prevPutTickers.has('MSFT')).toBe(true)
+    expect(result.current.diff.prevPutContracts.has('MSFT261219P00250000')).toBe(true)
   })
 
   it('sets empty diff when there is no previous report', async () => {
     mockFetch({ 'put-scan-2026-05-13_09-31.json': PREV_REPORT })
     // Only one entry in manifest — no prev
     const { result } = renderHook(() =>
-      useReport('put-scan-2026-05-13_09-31', [MANIFEST[1]])
+      usePutsReport('put-scan-2026-05-13_09-31', [MANIFEST[1]])
     )
     await waitFor(() => expect(result.current.report).not.toBeNull())
     expect(result.current.diff.prevReportId).toBeNull()
-    expect(result.current.diff.prevContracts.size).toBe(0)
-    expect(result.current.diff.prevTickers.size).toBe(0)
+    expect(result.current.diff.prevPutContracts.size).toBe(0)
+    expect(result.current.diff.prevPutTickers.size).toBe(0)
   })
 
   it('handles prev report fetch failure gracefully', async () => {
@@ -168,9 +168,8 @@ describe('useReport', () => {
       return Promise.reject(new Error('prev fetch failed'))
     }))
 
-    const { result } = renderHook(() => useReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
     await waitFor(() => expect(result.current.report).not.toBeNull())
-    // Should still load the current report even if prev fails
     expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31')
     expect(result.current.diff.prevReportId).toBeNull()
   })
@@ -182,7 +181,7 @@ describe('useReport', () => {
     })
 
     const { result, rerender } = renderHook(
-      ({ id }: { id: string }) => useReport(id, MANIFEST),
+      ({ id }: { id: string }) => usePutsReport(id, MANIFEST),
       { initialProps: { id: 'put-scan-2026-05-14_09-31' } }
     )
     await waitFor(() => expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31'))
@@ -200,7 +199,7 @@ describe('useReport', () => {
       json: () => reportPromise,
     })))
 
-    const { result } = renderHook(() => useReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
     expect(result.current.loading).toBe(true)
 
     act(() => resolveReport(REPORT))

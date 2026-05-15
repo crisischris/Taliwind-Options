@@ -102,7 +102,73 @@ export const ABOUT_PAGE = {
 } as const
 
 export const CALLS_PAGE = {
-  icon:       '📞',
-  title:      'Calls',
-  comingSoon: 'Coming soon.',
+  title:       'Call Report',
+  loading:     'Loading…',
+  empty:       'No reports found — run the scanner to generate one.',
+  newOnly:     'New Only',
+  expandAll:   'Expand All',
+  collapseAll: 'Collapse All',
+  noNewItems:  'no new items',
+} as const
+
+export const CALLS_HERO_CARD = {
+  short:    { label: 'Best Short-Dated',           icon: '⚡' },
+  long:     { label: 'Best Long-Dated / LEAP',     icon: '🚀' },
+  moonshot: { label: 'Top Moonshot — return only', icon: '🎰' },
+  stats: {
+    returnMultiple: 'Return Multiple',
+    probItm:        'Prob ITM',
+    askPerShare:    'Ask / Share',
+    contractCost:   'Contract Cost',
+    strike:         'Strike',
+    expiry:         'Expiry',
+    iv:             'IV',
+  },
+} as const
+
+export const CALLS_TICKER_CARD = {
+  short:    { label: '⚡ Short-Dated < 6 months'       },
+  long:     { label: '🚀 Long-Dated / LEAPs 6+ months' },
+  moonshot: { label: '🎰 Moonshots — return only'      },
+  expand:   'expand',
+  collapse: 'collapse',
+} as const
+
+export const CALLS_OPTIONS_TABLE = {
+  columns: [
+    { key: 'return_multiple',   label: 'Return',        tip: 'Strike price divided by ask price. A proxy for leverage — higher means more upside per dollar risked.' },
+    { key: 'prob_itm',          label: 'Prob ITM',      tip: 'Black-Scholes risk-neutral probability this call expires in-the-money. Options are ranked by Return x Prob ITM combined.' },
+    { key: 'expiry',            label: 'Expiry',        tip: 'Option expiration date. The call must expire in-the-money to have intrinsic value.' },
+    { key: 'strike',            label: 'Strike',        tip: 'The price the stock must exceed for this call to have intrinsic value at expiry.' },
+    { key: 'ask',               label: 'Ask',           tip: 'Current asking price per share. One contract = 100 shares, so multiply by 100 for total cost.' },
+    { key: 'contract_cost',     label: 'Contract Cost', tip: 'Total cost of one contract in USD (ask x 100 shares). This is the actual cash outlay.' },
+    { key: 'cost_pct',          label: 'Cost %',        tip: "Ask as a percentage of the current stock price. How much you are risking relative to the stock's value." },
+    { key: 'breakeven_rise_pct', label: 'BE Rise',      tip: 'Breakeven rise — how far the stock must rise for you to break even at expiry (strike plus ask, expressed as % above current price).' },
+    { key: 'iv',                label: 'IV',            tip: "Implied Volatility — the market's annualised expected price swing baked into the option price." },
+    { key: 'open_interest',     label: 'Open Int',      tip: 'Open Interest — total number of outstanding contracts. Higher = more liquid.' },
+    { key: 'volume',            label: 'Volume',        tip: 'Contracts traded today. A real-time liquidity signal.' },
+  ],
+} as const
+
+export const CALLS_METHODOLOGY = {
+  trigger: 'How are these calls selected?',
+  thesis: {
+    heading: 'The Thesis',
+    body: 'Macro tailwinds in AI, space, and disruptive tech create asymmetric upside in smaller, lesser-known names. ARK Invest actively identifies these companies. This scanner finds ARK holdings showing strong 90-day momentum and surfaces cheap out-of-the-money calls on them. The setup is a trend-continuation bet — small premium at risk, large payoff if the run extends.',
+  },
+  judgementCalls: {
+    heading: 'Judgement Calls',
+    intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
+    rules: [
+      { rule: 'Universe', detail: 'Tickers held across ARKK and ARKX ETFs. ARK actively curates these as disruptive / high-growth names. Holdings are cached daily from ARK\'s published CSV.' },
+      { rule: '15%+ momentum in 90 days', detail: 'The ticker must be up at least 15% over the trailing 90 days. This confirms the trend is live before we look for calls.' },
+      { rule: 'Out-of-the-money calls only', detail: 'We want cheap optionality on a continuation move, not intrinsic value. ITM calls are excluded.' },
+      { rule: 'Expiry between 60 and 365 DTE', detail: 'Long enough for the thesis to play out. LEAPs are included — macro trends take time.' },
+      { rule: 'Ask ≤ 4% of stock price', detail: 'Keeps premium cost manageable. These are momentum names with naturally higher volatility, so we allow slightly more than the put scanner.' },
+      { rule: 'Implied volatility ≤ 150%', detail: 'High-momentum stocks carry high IV. We accept up to 150% — above that the market is already pricing in a parabolic move.' },
+      { rule: 'Minimum liquidity', detail: 'Open interest ≥ 10, or any volume traded today, or a recorded last price.' },
+      { rule: 'Scored by return × prob ITM', detail: 'Calls are ranked by return multiple (strike ÷ ask) multiplied by Black-Scholes probability of expiring in-the-money. This balances raw upside against realistic odds.' },
+      { rule: 'Top 10 per bucket', detail: 'Short-dated (< 6 months) and long-dated / LEAPs (6+ months) are capped at 10 each, sorted by score. Moonshots — the top 5 by raw return multiple — are surfaced separately.' },
+    ],
+  },
 } as const

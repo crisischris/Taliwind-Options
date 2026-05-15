@@ -9,8 +9,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/manifest.json': 'http://localhost:8765',
-      '/put-scan-': { target: 'http://localhost:8765', rewrite: p => p },
+      '/puts': { target: 'http://localhost:8765', rewrite: p => p },
+      '/calls': { target: 'http://localhost:8765', rewrite: p => p },
     },
   },
   test: {

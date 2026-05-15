@@ -4,17 +4,13 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { TICKER_CARD } from '@/constants/strings'
-import type { PutTicker } from '@/types/report'
-import OptionsTable from '@/components/OptionsTable'
-
-export interface ExpansionOverride {
-  open: boolean
-  v: number
-}
+import { CALLS_TICKER_CARD } from '@/constants/strings'
+import type { CallTicker } from '@/types/report'
+import CallsOptionsTable from '@/components/CallsOptionsTable'
+import type { ExpansionOverride } from '@/components/TickerCard'
 
 interface Props {
-  ticker: PutTicker
+  ticker: CallTicker
   shortHeroContract: string
   longHeroContract: string
   moonshotHeroContract: string
@@ -24,7 +20,7 @@ interface Props {
   expansionOverride?: ExpansionOverride | null
 }
 
-export default function TickerCard({
+export default function CallsTickerCard({
   ticker, shortHeroContract, longHeroContract, moonshotHeroContract,
   prevContracts, prevTickers, newOnly, expansionOverride,
 }: Props) {
@@ -36,16 +32,16 @@ export default function TickerCard({
     setOpen({ short: expansionOverride.open, long: expansionOverride.open, moonshot: expansionOverride.open })
   }, [expansionOverride])
 
-  const isNew = (p: { contract: string }) =>
-    !newOnly || prevContracts.size === 0 || !prevContracts.has(p.contract)
+  const isNew = (c: { contract: string }) =>
+    !newOnly || prevContracts.size === 0 || !prevContracts.has(c.contract)
 
-  const short     = ticker.puts.filter(p => p.term === 'short'    && isNew(p))
-  const long      = ticker.puts.filter(p => p.term === 'long'     && isNew(p))
-  const moonshots = ticker.puts.filter(p => p.term === 'moonshot' && isNew(p))
+  const short     = ticker.calls.filter(c => c.term === 'short'    && isNew(c))
+  const long      = ticker.calls.filter(c => c.term === 'long'     && isNew(c))
+  const moonshots = ticker.calls.filter(c => c.term === 'moonshot' && isNew(c))
 
-  const isNewTicker = prevTickers.size > 0 && !prevTickers.has(ticker.ticker)
-  const newPutCount = prevContracts.size > 0
-    ? ticker.puts.filter(p => !prevContracts.has(p.contract)).length
+  const isNewTicker  = prevTickers.size > 0 && !prevTickers.has(ticker.ticker)
+  const newCallCount = prevContracts.size > 0
+    ? ticker.calls.filter(c => !prevContracts.has(c.contract)).length
     : 0
 
   return (
@@ -57,48 +53,48 @@ export default function TickerCard({
         {isNewTicker && (
           <Badge variant="success" className="font-bold text-[10px]">NEW TICKER</Badge>
         )}
-        {!isNewTicker && newPutCount > 0 && (
+        {!isNewTicker && newCallCount > 0 && (
           <Badge variant="success" className="font-semibold">
-            {newPutCount} new put{newPutCount !== 1 ? 's' : ''}
+            {newCallCount} new call{newCallCount !== 1 ? 's' : ''}
           </Badge>
         )}
         <div className="ml-auto flex gap-1">
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
             onClick={() => setOpen({ short: true, long: true, moonshot: true })}>
-            {TICKER_CARD.expand}
+            {CALLS_TICKER_CARD.expand}
           </Button>
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
             onClick={() => setOpen({ short: false, long: false, moonshot: false })}>
-            {TICKER_CARD.collapse}
+            {CALLS_TICKER_CARD.collapse}
           </Button>
         </div>
       </div>
 
       {short.length > 0 && (
-        <TermSection label={TICKER_CARD.short.label}
+        <TermSection label={CALLS_TICKER_CARD.short.label}
           count={short.length} open={open.short}
           onToggle={v => setOpen(s => ({ ...s, short: v }))} borderTop>
-          <OptionsTable puts={short} currentPrice={ticker.current_price}
-            heroContract={shortHeroContract} heroRowId="hero-short"
+          <CallsOptionsTable calls={short} currentPrice={ticker.current_price}
+            heroContract={shortHeroContract} heroRowId="hero-call-short"
             prevContracts={prevContracts} />
         </TermSection>
       )}
       {long.length > 0 && (
-        <TermSection label={TICKER_CARD.long.label}
+        <TermSection label={CALLS_TICKER_CARD.long.label}
           count={long.length} open={open.long}
           onToggle={v => setOpen(s => ({ ...s, long: v }))} borderTop>
-          <OptionsTable puts={long} currentPrice={ticker.current_price}
-            heroContract={longHeroContract} heroRowId="hero-long"
+          <CallsOptionsTable calls={long} currentPrice={ticker.current_price}
+            heroContract={longHeroContract} heroRowId="hero-call-long"
             prevContracts={prevContracts} />
         </TermSection>
       )}
       {moonshots.length > 0 && (
-        <TermSection label={TICKER_CARD.moonshot.label}
+        <TermSection label={CALLS_TICKER_CARD.moonshot.label}
           labelCls="text-gold/80" headerCls="bg-gold/5"
           count={moonshots.length} open={open.moonshot}
           onToggle={v => setOpen(s => ({ ...s, moonshot: v }))} borderTop>
-          <OptionsTable puts={moonshots} currentPrice={ticker.current_price}
-            heroContract={moonshotHeroContract} heroRowId="hero-moonshot"
+          <CallsOptionsTable calls={moonshots} currentPrice={ticker.current_price}
+            heroContract={moonshotHeroContract} heroRowId="hero-call-moonshot"
             prevContracts={prevContracts} />
         </TermSection>
       )}
@@ -122,18 +118,18 @@ function TermSection({ label, labelCls, headerCls, count, open, onToggle, border
     <Collapsible open={open} onOpenChange={onToggle}>
       <div
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none bg-muted/40",
-          borderTop && "border-t border-border",
-          open && "border-b border-border",
+          'flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none bg-muted/40',
+          borderTop && 'border-t border-border',
+          open && 'border-b border-border',
           headerCls,
         )}
         onClick={() => onToggle(!open)}
       >
-        <span className={cn("text-xs font-semibold uppercase tracking-wider text-muted-foreground", labelCls)}>
+        <span className={cn('text-xs font-semibold uppercase tracking-wider text-muted-foreground', labelCls)}>
           {label}
         </span>
         <span className="text-xs font-normal text-muted-foreground/60">({count})</span>
-        <ChevronDown className={cn("h-3 w-3 ml-auto text-muted-foreground transition-transform duration-200", open && "rotate-180")} />
+        <ChevronDown className={cn('h-3 w-3 ml-auto text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
       </div>
       <CollapsibleContent>{children}</CollapsibleContent>
     </Collapsible>

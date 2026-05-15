@@ -1,4 +1,5 @@
 import importlib
+
 import indicators.config as config_mod
 from indicators.config import Config
 

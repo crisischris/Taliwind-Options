@@ -8,8 +8,7 @@ import pytest
 
 import indicators.cache as cache_mod
 from indicators import cache
-from indicators.universe import get_universe, _read_html
-
+from indicators.universe import _read_html, get_universe
 
 # ── fixtures ─────────────────────────────────────────────────────────────────
 

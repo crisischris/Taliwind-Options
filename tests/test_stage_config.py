@@ -1,4 +1,5 @@
 import pytest
+
 from infra.stage_config import StageConfig
 
 

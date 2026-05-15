@@ -6,8 +6,6 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Bugs & Investigations
 
-- `[0]` Investigate why we're getting exactly 60 short and long puts — looks like an artificial cap
-- `[1]` A ticker shouldn't require all 3 sections (short, long, moonshot) — surface tickers with only one qualifying category
 
 ## Frontend
 
@@ -16,18 +14,14 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Scanner & Options Engine
 
-- `[3]` Evaluate whether running N times per day makes sense (pre-market, open, close)
 
 ## Infrastructure
 
-- `[0]` Add beta and gamma stages
 - `[1]` Investigate yfinance / API usage limits — assess exhaustion risk at current and projected call volume
 - `[4]` Plan for scale: CDN, database, storage strategy as user base grows and persitent URL.
 
 ## Testing
 
-- `[0]` Add integration tests for the scanner logic in beta / gamma
-- `[0]` Add unit tests
 
 ## Product & Features
 
