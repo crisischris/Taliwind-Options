@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lambda_handler import _InvocationLogger, _write_report_to_s3, handler
+from lambda_handler import _InvocationLogger, _write_manifest_to_s3, _write_report_to_s3, handler
 from tests.conftest import make_signal
 
 
@@ -174,6 +174,27 @@ def test_write_report_deduplicates_manifest():
     )
     written = json.loads(manifest_call.kwargs["Body"])
     assert len(written) == 1
+
+
+def test_write_manifest_creates_when_missing():
+    mock_s3 = _make_s3()
+    log = MagicMock()
+    _write_manifest_to_s3(mock_s3, "my-bucket", "puts/manifest.json", "put-scan-001", {"tickers_flagged": 1}, "ts", log)
+    call = next(c for c in mock_s3.put_object.call_args_list if c.kwargs["Key"] == "puts/manifest.json")
+    written = json.loads(call.kwargs["Body"])
+    assert len(written) == 1
+    assert written[0]["id"] == "put-scan-001"
+
+
+def test_write_manifest_prepends_to_existing():
+    existing = [{"id": "put-scan-old", "generated_at": "ts-old"}]
+    mock_s3 = _make_s3(existing_puts=existing)
+    log = MagicMock()
+    _write_manifest_to_s3(mock_s3, "my-bucket", "puts/manifest.json", "put-scan-new", {"tickers_flagged": 2}, "ts-new", log)
+    call = next(c for c in mock_s3.put_object.call_args_list if c.kwargs["Key"] == "puts/manifest.json")
+    written = json.loads(call.kwargs["Body"])
+    assert written[0]["id"] == "put-scan-new"
+    assert written[1]["id"] == "put-scan-old"
 
 
 def test_write_report_sets_content_type():

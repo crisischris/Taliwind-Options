@@ -5,8 +5,15 @@ import math
 
 import pytest
 
-from indicators.report import _build_puts_report, _first_signal, _put_to_dict, _update_manifest
-from tests.conftest import make_signal
+from indicators.report import (
+    _build_calls_report,
+    _build_puts_report,
+    _call_to_dict,
+    _first_signal,
+    _put_to_dict,
+    _update_manifest,
+)
+from tests.conftest import make_call_signal, make_signal
 
 # ── _put_to_dict ──────────────────────────────────────────────────────────────
 
@@ -145,6 +152,113 @@ def test_build_report_ticker_order_preserves_insertion():
     report = _build_puts_report(signals, "id", "ts")
     tickers = [t["ticker"] for t in report["tickers"]]
     assert tickers == ["TSLA", "AAPL"]
+
+
+# ── _call_to_dict ─────────────────────────────────────────────────────────────
+
+def test_call_to_dict_basic_fields():
+    s = make_call_signal()
+    d = _call_to_dict(s)
+    assert d["contract"] == s.data["contract"]
+    assert d["term"] == "short"
+    assert d["expiry"] == s.data["expiry"]
+    assert d["strike"] == s.data["strike"]
+    assert d["ask"] == s.data["ask"]
+    assert d["iv"] == s.data["iv"]
+    assert d["return_multiple"] == s.data["return_multiple"]
+    assert d["prob_itm"] == s.data["prob_itm"]
+    assert d["breakeven_rise_pct"] == s.data["breakeven_rise_pct"]
+
+
+def test_call_to_dict_no_context_fields_by_default():
+    d = _call_to_dict(make_call_signal())
+    assert "ticker" not in d
+    assert "momentum_pct" not in d
+    assert "current_price" not in d
+
+
+def test_call_to_dict_with_context():
+    d = _call_to_dict(make_call_signal(), with_context=True)
+    assert d["ticker"] == "AAPL"
+    assert d["momentum_pct"] == 90.0
+    assert d["current_price"] == 200.0
+
+
+def test_call_to_dict_nan_open_interest():
+    s = make_call_signal(open_interest=float("nan"))
+    d = _call_to_dict(s)
+    assert d["open_interest"] == 0
+
+
+def test_call_to_dict_nan_volume():
+    s = make_call_signal(volume=float("nan"))
+    d = _call_to_dict(s)
+    assert d["volume"] is None
+
+
+def test_call_to_dict_valid_volume():
+    s = make_call_signal(volume=5)
+    d = _call_to_dict(s)
+    assert d["volume"] == 5
+
+
+# ── _build_calls_report ───────────────────────────────────────────────────────
+
+def test_build_calls_report_structure():
+    signals = [make_call_signal("TSLA", term="short"), make_call_signal("NVDA", term="long")]
+    report = _build_calls_report(signals, "call-scan-2026-01-01_09-31", "2026-01-01_09-31")
+    assert report["id"] == "call-scan-2026-01-01_09-31"
+    assert report["generated_at"] == "2026-01-01_09-31"
+    assert "summary" in report
+    assert "heroes" in report
+    assert "tickers" in report
+
+
+def test_build_calls_report_summary_counts():
+    signals = [
+        make_call_signal("TSLA", term="short"),
+        make_call_signal("TSLA", term="short", contract="TSLA261219C00260000"),
+        make_call_signal("NVDA", term="long"),
+        make_call_signal("PLTR", term="moonshot"),
+    ]
+    report = _build_calls_report(signals, "id", "ts")
+    assert report["summary"]["short_calls"] == 2
+    assert report["summary"]["long_calls"] == 1
+    assert report["summary"]["moonshot_calls"] == 1
+    assert report["summary"]["tickers_flagged"] == 3
+
+
+def test_build_calls_report_empty():
+    report = _build_calls_report([], "id", "ts")
+    assert report["heroes"]["short"] is None
+    assert report["heroes"]["long"] is None
+    assert report["heroes"]["moonshot"] is None
+    assert report["tickers"] == []
+    assert report["summary"]["tickers_flagged"] == 0
+
+
+def test_build_calls_report_hero_is_max_score():
+    low = make_call_signal("TSLA", term="short", score=1.0, contract="TSLA_LOW")
+    high = make_call_signal("NVDA", term="short", score=9.0, contract="NVDA_HIGH")
+    report = _build_calls_report([low, high], "id", "ts")
+    assert report["heroes"]["short"]["contract"] == "NVDA_HIGH"
+
+
+def test_build_calls_report_ticker_calls_include_all_terms():
+    signals = [
+        make_call_signal("TSLA", term="short"),
+        make_call_signal("TSLA", term="long", contract="TSLA_LONG"),
+        make_call_signal("TSLA", term="moonshot", contract="TSLA_MOON"),
+    ]
+    report = _build_calls_report(signals, "id", "ts")
+    assert len(report["tickers"]) == 1
+    assert len(report["tickers"][0]["calls"]) == 3
+
+
+def test_build_calls_report_ticker_has_momentum_pct():
+    signals = [make_call_signal("TSLA", term="short", momentum_pct=120.0)]
+    report = _build_calls_report(signals, "id", "ts")
+    assert report["tickers"][0]["momentum_pct"] == 120.0
 
 
 # ── _update_manifest ──────────────────────────────────────────────────────────
