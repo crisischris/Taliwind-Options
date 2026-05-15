@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Install dependencies
+# First-time setup (once per clone)
 pip install -e .
+git config core.hooksPath .githooks  # enables pre-push test gate
 
 # Invoke the scanner locally (runs a full scan, no S3 write)
 python -c "

@@ -39,3 +39,36 @@ def invocation_result(lambda_client, config):
         InvocationType="RequestResponse",
     )
     return json.loads(resp["Payload"].read())
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _cleanup_artifacts(s3_client, config):
+    """Delete any S3 reports written during this test run."""
+    try:
+        obj = s3_client.get_object(Bucket=config.bucket_name, Key="manifest.json")
+        before_ids = {e["id"] for e in json.loads(obj["Body"].read())}
+    except Exception:
+        before_ids = set()
+
+    yield
+
+    try:
+        obj = s3_client.get_object(Bucket=config.bucket_name, Key="manifest.json")
+        after_manifest = json.loads(obj["Body"].read())
+    except Exception:
+        return
+
+    new_ids = {e["id"] for e in after_manifest} - before_ids
+    if not new_ids:
+        return
+
+    for report_id in new_ids:
+        s3_client.delete_object(Bucket=config.bucket_name, Key=f"{report_id}.json")
+
+    surviving = [e for e in after_manifest if e["id"] not in new_ids]
+    s3_client.put_object(
+        Bucket=config.bucket_name,
+        Key="manifest.json",
+        Body=json.dumps(surviving, indent=2),
+        ContentType="application/json",
+    )
