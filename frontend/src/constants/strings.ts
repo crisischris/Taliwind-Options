@@ -160,7 +160,7 @@ export const CALLS_METHODOLOGY = {
     heading: 'Judgement Calls',
     intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
     rules: [
-      { rule: 'Universe', detail: 'Tickers held across ARKK and ARKX ETFs. ARK actively curates these as disruptive / high-growth names. Holdings are cached daily from ARK\'s published CSV.' },
+      { rule: 'Universe', detail: 'Tickers held across ARKK, ARKX, ARKQ, SMH, AIQ, BOTZ, and ROKT ETFs — a cross-section of AI, semiconductors, robotics, and space plays. Holdings are fetched daily via Yahoo Finance and cached.' },
       { rule: '15%+ momentum in 90 days', detail: 'The ticker must be up at least 15% over the trailing 90 days. This confirms the trend is live before we look for calls.' },
       { rule: 'Out-of-the-money calls only', detail: 'We want cheap optionality on a continuation move, not intrinsic value. ITM calls are excluded.' },
       { rule: 'Expiry between 60 and 365 DTE', detail: 'Long enough for the thesis to play out. LEAPs are included — macro trends take time.' },

@@ -46,13 +46,13 @@ class TrendCallScanner(Indicator):
         momentum_tickers = self._filter_by_momentum()
         if not momentum_tickers:
             logger.info(
-                "No ARK tickers passed momentum filter (>= %.0f%% in %d days)",
+                "No universe tickers passed momentum filter (>= %.0f%% in %d days)",
                 config.trend_call_momentum_min_pct,
                 config.trend_call_momentum_days,
             )
             return []
 
-        logger.info("%d ARK tickers passed momentum filter", len(momentum_tickers))
+        logger.info("%d universe tickers passed momentum filter", len(momentum_tickers))
 
         signals: list[Signal] = []
         for ticker, momentum_pct in momentum_tickers:
@@ -67,14 +67,14 @@ class TrendCallScanner(Indicator):
         return signals
 
     def _filter_by_momentum(self) -> list[tuple[str, float]]:
-        key = f"ark_momentum_{config.trend_call_momentum_days}d"
+        key = f"call_universe_momentum_{config.trend_call_momentum_days}d"
         cached = cache.get(key)
         if cached is not None:
-            logger.info("Using cached ARK momentum data")
+            logger.info("Using cached call universe momentum data")
             return cached
 
         logger.info(
-            "Fetching %d-day history for %d ARK tickers...",
+            "Fetching %d-day history for %d universe tickers...",
             config.trend_call_momentum_days,
             len(self.universe),
         )

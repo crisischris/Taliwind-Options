@@ -30,17 +30,17 @@ def handler(event: dict, context: Any) -> dict:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
     try:
-        from indicators.ark_holdings import get_tickers
+        from indicators.call_universe import get_tickers
         from indicators.sources.gainer_puts import GainerPutScanner
         from indicators.sources.trend_calls import TrendCallScanner
 
         log.info("Running daily gainer put scan")
         put_signals = [s for s in GainerPutScanner().check() if s.triggered]
 
-        log.info("Fetching ARK holdings for call scan")
-        ark_tickers = get_tickers(s3=s3, bucket=bucket_name)
-        log.info("Running trend call scan (%d ARK tickers)", len(ark_tickers))
-        call_signals = [s for s in TrendCallScanner(universe=ark_tickers).check() if s.triggered]
+        log.info("Fetching call universe tickers")
+        universe_tickers = get_tickers(s3=s3, bucket=bucket_name)
+        log.info("Running trend call scan (%d universe tickers)", len(universe_tickers))
+        call_signals = [s for s in TrendCallScanner(universe=universe_tickers).check() if s.triggered]
 
         if not put_signals and not call_signals:
             log.info("No qualifying signals found — no report written")

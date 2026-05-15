@@ -60,7 +60,7 @@ def test_handler_no_signals():
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client"):
             with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.ark_holdings.get_tickers", return_value=[]):
+                with patch("indicators.call_universe.get_tickers", return_value=[]):
                     with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = []
                         MockCallScanner.return_value.check.return_value = []
@@ -77,7 +77,7 @@ def test_handler_with_signals():
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client", return_value=mock_s3):
             with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.ark_holdings.get_tickers", return_value=[]):
+                with patch("indicators.call_universe.get_tickers", return_value=[]):
                     with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = signals
                         MockCallScanner.return_value.check.return_value = []
@@ -106,7 +106,7 @@ def test_handler_filters_untriggered_signals():
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client", return_value=mock_s3):
             with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.ark_holdings.get_tickers", return_value=[]):
+                with patch("indicators.call_universe.get_tickers", return_value=[]):
                     with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = [triggered, untriggered]
                         MockCallScanner.return_value.check.return_value = []
@@ -120,7 +120,7 @@ def test_handler_uses_request_id_in_log(caplog):
         with patch.dict("os.environ", {"REPORTS_BUCKET": "bucket"}):
             with patch("lambda_handler.boto3.client"):
                 with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                    with patch("indicators.ark_holdings.get_tickers", return_value=[]):
+                    with patch("indicators.call_universe.get_tickers", return_value=[]):
                         with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                             MockScanner.return_value.check.return_value = []
                             MockCallScanner.return_value.check.return_value = []
