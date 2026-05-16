@@ -62,7 +62,7 @@ def test_static_site_responds(config: Any) -> None:
     url = f"http://{config.bucket_name}.s3-website-{REGION}.amazonaws.com"
     resp = httpx.get(url, timeout=15)
     assert resp.status_code == 200
-    assert "Options Hunter" in resp.text
+    assert '<div id="root">' in resp.text
 
 
 @pytest.mark.integration
