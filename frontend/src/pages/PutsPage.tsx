@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { HERO_CARD, PUTS_PAGE, OPTIONS_TABLE } from '@/constants/strings'
 import PutsFiltersSheet from '@/components/PutsFiltersSheet'
-import HeroCard from '@/components/HeroCard'
+import HeroCardDeck from '@/components/HeroCardDeck'
 import ScanBadge from '@/components/ScanBadge'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
 import type { Put } from '@/types/report'
@@ -190,10 +190,15 @@ export default function PutsPage() {
         {report && (
           <>
             {/* Hero cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <HeroCard option={report.heroes.short}    movePct={report.heroes.short?.gain_pct    ?? 0} moveLabel="(1Y)" label={HERO_CARD.short.label}    icon={HERO_CARD.short.icon}    heroRowId="hero-short"    onScrollTo={scrollToHero} />
-              <HeroCard option={report.heroes.long}     movePct={report.heroes.long?.gain_pct     ?? 0} moveLabel="(1Y)" label={HERO_CARD.long.label}     icon={HERO_CARD.long.icon}     heroRowId="hero-long"     onScrollTo={scrollToHero} />
-              <HeroCard option={report.heroes.moonshot} movePct={report.heroes.moonshot?.gain_pct ?? 0} moveLabel="(1Y)" label={HERO_CARD.moonshot.label} icon={HERO_CARD.moonshot.icon} heroRowId="hero-moonshot" onScrollTo={scrollToHero} />
+            <div className="mb-8">
+              <HeroCardDeck
+                cards={[
+                  { option: report.heroes.short,    movePct: report.heroes.short?.gain_pct    ?? 0, moveLabel: '(1Y)', label: HERO_CARD.short.label,    icon: HERO_CARD.short.icon,    heroRowId: 'hero-short'    },
+                  { option: report.heroes.long,     movePct: report.heroes.long?.gain_pct     ?? 0, moveLabel: '(1Y)', label: HERO_CARD.long.label,     icon: HERO_CARD.long.icon,     heroRowId: 'hero-long'     },
+                  { option: report.heroes.moonshot, movePct: report.heroes.moonshot?.gain_pct ?? 0, moveLabel: '(1Y)', label: HERO_CARD.moonshot.label, icon: HERO_CARD.moonshot.icon, heroRowId: 'hero-moonshot' },
+                ]}
+                onHeroClick={scrollToHero}
+              />
             </div>
 
             {/* Toolbar */}
@@ -217,7 +222,7 @@ export default function PutsPage() {
 
             {/* Ticker tabs */}
             <div className="border-b border-border mb-6 mt-3">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-hidden">
                 <div className="flex min-w-max">
                   {visibleTickers.map(t => {
                     const isActive    = t.ticker === activeTicker?.ticker

@@ -1,81 +1,13 @@
-import { useState } from 'react'
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 import { useManifest, useReport } from '@/hooks/useReport'
-import HeroCard from '@/components/HeroCard'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { HERO_CARD, HOME_PAGE } from '@/constants/strings'
+import HeroCardDeck from '@/components/HeroCardDeck'
 import type { Page } from '@/components/Navbar'
-import type { BaseHeroOption } from '@/components/HeroCard'
+import type { DeckCard } from '@/components/HeroCardDeck'
 
 interface Props {
   onNavigate: (page: Page, heroRowId?: string) => void
-}
-
-interface DeckCard {
-  option: BaseHeroOption | null
-  movePct: number
-  moveLabel: string
-  label: string
-  icon: string
-  heroRowId: string
-}
-
-function HeroCardDeck({ cards, onHeroClick }: { cards: DeckCard[]; onHeroClick: (heroRowId: string) => void }) {
-  const [active, setActive] = useState(0)
-  const prev = () => setActive(i => (i - 1 + cards.length) % cards.length)
-  const next = () => setActive(i => (i + 1) % cards.length)
-
-  return (
-    <div>
-      {/* pb/pr gives offset silhouettes room to show below/right the front card */}
-      <div className="pb-7 pr-7">
-        <div className="relative">
-          {/* Silhouettes: solid bg-card + gold border only — zero transparency */}
-          {cards.length > 2 && (
-            <div className="absolute inset-0 rounded-lg border-2 border-gold/40 bg-card pointer-events-none"
-              style={{ transform: 'translate(28px, 28px)', zIndex: 1 }} />
-          )}
-          {cards.length > 1 && (
-            <div className="absolute inset-0 rounded-lg border-2 border-gold/40 bg-card pointer-events-none"
-              style={{ transform: 'translate(14px, 14px)', zIndex: 2 }} />
-          )}
-          {/* Opaque backing layer so the HeroCard gradient has no bleed-through */}
-          <div className="relative rounded-lg bg-card" style={{ zIndex: 3 }}>
-            <HeroCard {...cards[active]} onScrollTo={onHeroClick} />
-          </div>
-        </div>
-      </div>
-
-      {cards.length > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-2">
-          <button
-            onClick={prev}
-            className={cn(
-              'rounded-full border border-border p-1.5 transition-colors',
-              'hover:bg-accent hover:border-accent-foreground/20',
-            )}
-            aria-label="Previous"
-          >
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <span className="text-xs text-muted-foreground tabular-nums w-8 text-center">
-            {active + 1} / {cards.length}
-          </span>
-          <button
-            onClick={next}
-            className={cn(
-              'rounded-full border border-border p-1.5 transition-colors',
-              'hover:bg-accent hover:border-accent-foreground/20',
-            )}
-            aria-label="Next"
-          >
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
-      )}
-    </div>
-  )
 }
 
 export default function HomePage({ onNavigate }: Props) {

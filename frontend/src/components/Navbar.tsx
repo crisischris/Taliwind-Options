@@ -1,9 +1,9 @@
-import React from "react"
-import { Settings, TrendingUp, TrendingDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { APP_NAME, NAVBAR } from "@/constants/strings"
-import logoLight from "@/assets/options-hunter-logo.svg"
-import logoDark from "@/assets/options-hunter-logo-dark.svg"
+import React from 'react'
+import { Settings, TrendingUp, TrendingDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { APP_NAME, NAVBAR } from '@/constants/strings'
+import logoLight from '@/assets/options-hunter-logo.svg'
+import logoDark from '@/assets/options-hunter-logo-dark.svg'
 
 type Page = 'home' | 'puts' | 'calls' | 'about'
 
@@ -33,11 +33,13 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
           <img src={logoLight} alt={APP_NAME} className="h-12 dark:hidden" />
           <img src={logoDark}  alt={APP_NAME} className="h-12 hidden dark:block" />
         </button>
-        <nav className="flex items-center gap-1">
+
+        {/* Desktop nav */}
+        <nav className="hidden sm:flex items-center gap-1">
           {LINKS.map(({ id, label, icon }) => (
             <Button
               key={id}
-              variant={current === id ? "secondary" : "ghost"}
+              variant={current === id ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => onChange(id)}
               className="flex items-center gap-1.5"
@@ -51,6 +53,13 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
             <Settings className="h-4 w-4" />
           </Button>
         </nav>
+
+        {/* Mobile: settings only — nav is in BottomNav */}
+        <div className="flex sm:hidden">
+          <Button variant="ghost" size="icon" onClick={onOpenSettings} aria-label="Settings">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </header>
   )

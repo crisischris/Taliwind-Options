@@ -67,3 +67,6 @@
   50%       { background-color: hsl(var(--gold) / 0.3); }
 }
 .hero-flash { animation: hero-flash 0.7s ease 3; }
+
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

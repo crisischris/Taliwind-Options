@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { CALLS_PAGE, HERO_CARD, CALLS_OPTIONS_TABLE } from '@/constants/strings'
-import HeroCard from '@/components/HeroCard'
+import HeroCardDeck from '@/components/HeroCardDeck'
 import ScanBadge from '@/components/ScanBadge'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
 import CallsFiltersSheet from '@/components/CallsFiltersSheet'
@@ -185,10 +185,15 @@ export default function CallsPage() {
         {report && (
           <>
             {/* Hero cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <HeroCard option={report.heroes.short}    movePct={report.heroes.short?.momentum_pct    ?? 0} moveLabel="90d" label={HERO_CARD.short.label}    icon={HERO_CARD.short.icon}    heroRowId="hero-call-short"    onScrollTo={scrollToHero} />
-              <HeroCard option={report.heroes.long}     movePct={report.heroes.long?.momentum_pct     ?? 0} moveLabel="90d" label={HERO_CARD.long.label}     icon={HERO_CARD.long.icon}     heroRowId="hero-call-long"     onScrollTo={scrollToHero} />
-              <HeroCard option={report.heroes.moonshot} movePct={report.heroes.moonshot?.momentum_pct ?? 0} moveLabel="90d" label={HERO_CARD.moonshot.label} icon={HERO_CARD.moonshot.icon} heroRowId="hero-call-moonshot" onScrollTo={scrollToHero} />
+            <div className="mb-8">
+              <HeroCardDeck
+                cards={[
+                  { option: report.heroes.short,    movePct: report.heroes.short?.momentum_pct    ?? 0, moveLabel: '90d', label: HERO_CARD.short.label,    icon: HERO_CARD.short.icon,    heroRowId: 'hero-call-short'    },
+                  { option: report.heroes.long,     movePct: report.heroes.long?.momentum_pct     ?? 0, moveLabel: '90d', label: HERO_CARD.long.label,     icon: HERO_CARD.long.icon,     heroRowId: 'hero-call-long'     },
+                  { option: report.heroes.moonshot, movePct: report.heroes.moonshot?.momentum_pct ?? 0, moveLabel: '90d', label: HERO_CARD.moonshot.label, icon: HERO_CARD.moonshot.icon, heroRowId: 'hero-call-moonshot' },
+                ]}
+                onHeroClick={scrollToHero}
+              />
             </div>
 
             {/* Toolbar */}
@@ -212,7 +217,7 @@ export default function CallsPage() {
 
             {/* Ticker tabs */}
             <div className="border-b border-border mb-6 mt-3">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-hidden">
                 <div className="flex min-w-max">
                   {visibleTickers.map(t => {
                     const isActive    = t.ticker === activeTicker?.ticker

@@ -28,13 +28,16 @@ interface Props {
 export default function HeroCard({ option, movePct, moveLabel, label, icon, heroRowId, onScrollTo }: Props) {
   if (!option) return null
   const contractCost = option.ask * 100
+  const returnStr = option.return_multiple >= 1000
+    ? `${(option.return_multiple / 1000).toFixed(1)}K`
+    : `${Math.round(option.return_multiple)}`
 
   return (
     <Card
-      className="border-2 border-gold/40 bg-gradient-to-br from-gold/10 to-card shadow-lg shadow-gold/10 cursor-pointer hover:border-gold/60 transition-colors"
+      className="h-full border-2 border-gold/40 bg-gradient-to-br from-gold/10 to-card shadow-lg shadow-gold/10 cursor-pointer hover:border-gold/60 transition-colors"
       onClick={() => onScrollTo(heroRowId)}
     >
-      <CardContent className="p-5">
+      <CardContent className="p-5 h-full flex flex-col">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl">{icon}</span>
           <p className="text-xs font-semibold uppercase tracking-widest text-gold/80">{label}</p>
@@ -48,9 +51,9 @@ export default function HeroCard({ option, movePct, moveLabel, label, icon, hero
           <span className="text-muted-foreground text-sm">@ ${option.current_price.toFixed(2)}</span>
         </div>
 
-        <div className="flex flex-wrap gap-6">
+        <div className="flex flex-wrap gap-6 mt-auto">
           <div>
-            <div className="text-gold text-4xl font-black">{Math.round(option.return_multiple)}x</div>
+            <div className="text-gold text-4xl font-black">{returnStr}x</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.returnMultiple}</div>
           </div>
           <div>

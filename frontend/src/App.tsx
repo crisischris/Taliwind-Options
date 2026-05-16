@@ -6,6 +6,7 @@ import PutsPage from './pages/PutsPage'
 import CallsPage from './pages/CallsPage'
 import AboutPage from './pages/AboutPage'
 import Footer from './components/Footer'
+import BottomNav from './components/BottomNav'
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme')
@@ -56,13 +57,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar current={page} onChange={goTo} onOpenSettings={() => setSettings(true)} />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 sm:pb-0 [overflow-x:clip]">
         {page === 'home'  && <HomePage onNavigate={goTo} />}
         {page === 'puts'  && <PutsPage />}
         {page === 'calls' && <CallsPage />}
         {page === 'about' && <AboutPage />}
       </main>
-      <Footer />
+      <div className="hidden sm:block"><Footer /></div>
+      <BottomNav current={page} onChange={goTo} />
       {showSettings && (
         <SettingsModal theme={theme} onToggle={toggleTheme} onClose={() => setSettings(false)} />
       )}
