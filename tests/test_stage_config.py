@@ -4,27 +4,27 @@ from infra.stage_config import StageConfig
 
 
 def test_beta_stack_name():
-    assert StageConfig("beta").stack_name == "OptionsHunterStack-Beta"
+    assert StageConfig("beta").stack_name == "TailwindOptionsStack-Beta"
 
 
 def test_prod_stack_name():
-    assert StageConfig("prod").stack_name == "OptionsHunterStack-Prod"
+    assert StageConfig("prod").stack_name == "TailwindOptionsStack-Prod"
 
 
 def test_beta_bucket_name():
-    assert StageConfig("beta").bucket_name == "options-hunter-reports-beta"
+    assert StageConfig("beta").bucket_name == "tailwind-options-reports-beta"
 
 
 def test_prod_bucket_name():
-    assert StageConfig("prod").bucket_name == "options-hunter-reports-prod"
+    assert StageConfig("prod").bucket_name == "tailwind-options-reports-prod"
 
 
 def test_beta_function_name():
-    assert StageConfig("beta").function_name == "options-hunter-scanner-beta"
+    assert StageConfig("beta").function_name == "tailwind-options-scanner-beta"
 
 
 def test_prod_function_name():
-    assert StageConfig("prod").function_name == "options-hunter-scanner-prod"
+    assert StageConfig("prod").function_name == "tailwind-options-scanner-prod"
 
 
 def test_prod_enables_scheduler():

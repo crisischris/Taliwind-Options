@@ -2,8 +2,8 @@ import React from 'react'
 import { Settings, TrendingUp, TrendingDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { APP_NAME, NAVBAR } from '@/constants/strings'
-import logoLight from '@/assets/options-hunter-logo.svg'
-import logoDark from '@/assets/options-hunter-logo-dark.svg'
+import logoLight from '@/assets/tailwind-options-logo.svg'
+import logoDark from '@/assets/tailwind-options-logo-dark.svg'
 
 type Page = 'home' | 'puts' | 'calls' | 'about'
 

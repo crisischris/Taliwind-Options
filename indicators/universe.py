@@ -10,7 +10,7 @@ from . import cache
 
 logger = logging.getLogger(__name__)
 
-_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; options-hunter-bot/1.0)"}
+_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; tailwind-options-bot/1.0)"}
 
 
 def _read_html(url: str) -> list:

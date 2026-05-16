@@ -6,7 +6,7 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Security
 
-- `[0]` security volnerability scan.  
+- `[0]` security vulnerability scan.  
 - `[0]` general best practices re: sec.
 
 ## Bugs & Investigations
@@ -14,8 +14,6 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Frontend
 
-- `[1]` implement calls page logic
-- `[2]` Confirm Mobile-friendly layout
 
 ## Scanner & Options Engine
 
@@ -26,14 +24,11 @@ Priority scale: 0 = highest, 5 = lowest
 - `[4]` Plan for scale: CDN, database, storage strategy as user base grows and persitent URL.
 
 ## Testing
-- add UI testing (e.g. cypress).  core things like clicking the hero sets focus to a row etc.
-
 
 ## Product & Features
 
 - `[3]` User profiles and saved settings
 - `[3]` Define and scope premium feature set
-- `[4]` Add beta / gamma staging environments
 - `[4]` Evaluate what a full webapp architecture looks like (auth, persistence, etc.)
 
 ## Growth
@@ -45,3 +40,6 @@ Priority scale: 0 = highest, 5 = lowest
 - dynamic filters (client side changes?  API (have to consider this from a scalabilty mindset if so)?)
 - `[2]` Report retros — track how many flagged plays were actually ITM at expiry; surface most-profitable plays and optimal hold duration
 - longer lookbacks (is this something we care about?)
+
+## Alarms
+- alarms and push notifications on critical exceptions etc.

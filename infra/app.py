@@ -1,7 +1,7 @@
 import os
 
 import aws_cdk as cdk
-from options_hunter_stack import OptionsHunterStack
+from tailwind_options_stack import TailwindOptionsStack
 from stage_config import StageConfig
 
 app = cdk.App()
@@ -12,7 +12,7 @@ if not stage:
 
 config = StageConfig(stage=stage)
 
-OptionsHunterStack(
+TailwindOptionsStack(
     app,
     config.stack_name,
     config=config,

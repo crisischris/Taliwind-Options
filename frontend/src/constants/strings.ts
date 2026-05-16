@@ -1,4 +1,4 @@
-export const APP_NAME = 'Options Hunter'
+export const APP_NAME = 'Tailwind Options'
 
 export const NAVBAR = {
   home:  'Home',

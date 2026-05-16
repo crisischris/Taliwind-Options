@@ -25,14 +25,14 @@ _SCHEDULE = json.loads(
 )
 
 
-class OptionsHunterStack(cdk.Stack):
+class TailwindOptionsStack(cdk.Stack):
     def __init__(self, scope: Construct, id: str, config: StageConfig, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         # ── S3: report storage + static site ──────────────────────────────────
-        # NOTE: prod was previously deployed as bucket "options-hunter-reports"
-        # (stack "OptionsHunterStack"). The new prod bucket is
-        # "options-hunter-reports-prod". On first prod deploy, copy any reports
+        # NOTE: prod was previously deployed as bucket "tailwind-options-reports"
+        # (stack "TailwindOptionsStack"). The new prod bucket is
+        # "tailwind-options-reports-prod". On first prod deploy, copy any reports
         # you want to keep from the old bucket before tearing down the old stack.
 
         bucket = s3.Bucket(

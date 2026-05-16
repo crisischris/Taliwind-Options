@@ -13,15 +13,15 @@ class StageConfig:
 
     @property
     def stack_name(self) -> str:
-        return f"OptionsHunterStack-{self.stage.capitalize()}"
+        return f"TailwindOptionsStack-{self.stage.capitalize()}"
 
     @property
     def bucket_name(self) -> str:
-        return f"options-hunter-reports-{self.stage}"
+        return f"tailwind-options-reports-{self.stage}"
 
     @property
     def function_name(self) -> str:
-        return f"options-hunter-scanner-{self.stage}"
+        return f"tailwind-options-scanner-{self.stage}"
 
     @property
     def enable_scheduler(self) -> bool:

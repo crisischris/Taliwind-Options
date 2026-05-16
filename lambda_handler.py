@@ -1,5 +1,5 @@
 """
-AWS Lambda entry point for the options-hunter scanner.
+AWS Lambda entry point for the tailwind-options scanner.
 
 Single invocation that runs the put scanner and writes the JSON report + manifest to S3.
 """
