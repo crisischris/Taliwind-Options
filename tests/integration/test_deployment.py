@@ -25,28 +25,29 @@ def test_lambda_invokes_successfully(invocation_result: dict[str, Any]) -> None:
 def test_manifest_exists_and_is_valid(
     s3_client: Any, config: Any, invocation_result: dict[str, Any]
 ) -> None:
-    """manifest.json is present, parseable, and each entry has the required fields."""
-    obj = s3_client.get_object(Bucket=config.bucket_name, Key="manifest.json")
-    manifest = json.loads(obj["Body"].read())
-    assert isinstance(manifest, list)
-    for entry in manifest:
-        assert "id" in entry
-        assert "generated_at" in entry
-        assert "tickers_flagged" in entry
+    """puts/manifest.json and calls/manifest.json are present and well-formed."""
+    for prefix in ("puts", "calls"):
+        obj = s3_client.get_object(Bucket=config.bucket_name, Key=f"{prefix}/manifest.json")
+        manifest = json.loads(obj["Body"].read())
+        assert isinstance(manifest, list)
+        for entry in manifest:
+            assert "id" in entry
+            assert "generated_at" in entry
+            assert "tickers_flagged" in entry
 
 
 @pytest.mark.integration
 def test_latest_report_is_well_formed(
     s3_client: Any, config: Any, invocation_result: dict[str, Any]
 ) -> None:
-    """The most recent report JSON has the required top-level structure."""
-    obj = s3_client.get_object(Bucket=config.bucket_name, Key="manifest.json")
+    """The most recent puts report has the required top-level structure."""
+    obj = s3_client.get_object(Bucket=config.bucket_name, Key="puts/manifest.json")
     manifest = json.loads(obj["Body"].read())
     if not manifest:
         pytest.skip("Scanner found no signals today — no report to validate")
 
     latest_id = manifest[0]["id"]
-    report_obj = s3_client.get_object(Bucket=config.bucket_name, Key=f"{latest_id}.json")
+    report_obj = s3_client.get_object(Bucket=config.bucket_name, Key=f"puts/{latest_id}.json")
     report = json.loads(report_obj["Body"].read())
 
     assert report.get("id") == latest_id
@@ -69,11 +70,11 @@ def test_static_site_responds(config: Any) -> None:
 def test_manifest_s3_consistency(
     s3_client: Any, config: Any, invocation_result: dict[str, Any]
 ) -> None:
-    """Every report ID listed in manifest.json has a corresponding object in S3."""
-    obj = s3_client.get_object(Bucket=config.bucket_name, Key="manifest.json")
+    """Every report ID in puts/manifest.json has a corresponding object in S3."""
+    obj = s3_client.get_object(Bucket=config.bucket_name, Key="puts/manifest.json")
     manifest = json.loads(obj["Body"].read())
     if not manifest:
         pytest.skip("No reports in manifest")
 
     for entry in manifest:
-        s3_client.head_object(Bucket=config.bucket_name, Key=f"{entry['id']}.json")
+        s3_client.head_object(Bucket=config.bucket_name, Key=f"puts/{entry['id']}.json")
