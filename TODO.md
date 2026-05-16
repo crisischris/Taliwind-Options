@@ -4,6 +4,11 @@ Priority scale: 0 = highest, 5 = lowest
 
 ---
 
+## Security
+
+- `[0]` security volnerability scan.  
+- `[0]` general best practices re: sec.
+
 ## Bugs & Investigations
 
 
@@ -21,6 +26,7 @@ Priority scale: 0 = highest, 5 = lowest
 - `[4]` Plan for scale: CDN, database, storage strategy as user base grows and persitent URL.
 
 ## Testing
+- add UI testing (e.g. cypress).  core things like clicking the hero sets focus to a row etc.
 
 
 ## Product & Features

@@ -47,17 +47,16 @@ export default function TickerCard<T extends BaseOption>({
     setOpen({ short: expansionOverride.open, long: expansionOverride.open, moonshot: expansionOverride.open })
   }, [expansionOverride])
 
-  const isNew = (o: { contract: string }) =>
-    !newOnly || prevContracts.size === 0 || !prevContracts.has(o.contract)
+  const buckets = { short: [] as T[], long: [] as T[], moonshot: [] as T[] }
+  let newOptionCount = 0
+  for (const o of options) {
+    const actuallyNew = prevContracts.size > 0 && !prevContracts.has(o.contract)
+    if (actuallyNew) newOptionCount++
+    if (!newOnly || prevContracts.size === 0 || actuallyNew) buckets[o.term].push(o)
+  }
+  const { short, long, moonshot: moonshots } = buckets
 
-  const short     = options.filter(o => o.term === 'short'    && isNew(o))
-  const long      = options.filter(o => o.term === 'long'     && isNew(o))
-  const moonshots = options.filter(o => o.term === 'moonshot' && isNew(o))
-
-  const isNewTicker    = prevTickers.size > 0 && !prevTickers.has(ticker)
-  const newOptionCount = prevContracts.size > 0
-    ? options.filter(o => !prevContracts.has(o.contract)).length
-    : 0
+  const isNewTicker = prevTickers.size > 0 && !prevTickers.has(ticker)
 
   return (
     <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">

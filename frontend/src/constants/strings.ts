@@ -23,37 +23,37 @@ export const TICKER_CARD = {
   collapse: 'collapse',
 } as const
 
+const SHARED_OPTION_COLUMNS = [
+  { key: 'return_multiple', label: 'Return',        tip: 'Strike price divided by ask price. Options are ranked by Return x Prob ITM combined.' },
+  { key: 'prob_itm',        label: 'Prob ITM',      tip: 'Black-Scholes risk-neutral probability this option expires in-the-money.' },
+  { key: 'expiry',          label: 'Expiry',        tip: 'Option expiration date.' },
+  { key: 'strike',          label: 'Strike',        tip: 'The price the stock must reach for this option to have intrinsic value at expiry.' },
+  { key: 'ask',             label: 'Ask',           tip: 'Current asking price per share. One contract = 100 shares, so multiply by 100 for total cost.' },
+  { key: 'contract_cost',   label: 'Contract Cost', tip: 'Total cost of one contract in USD (ask x 100 shares). This is the actual cash outlay.' },
+  { key: 'cost_pct',        label: 'Cost %',        tip: "Ask as a percentage of the current stock price. How much you are risking relative to the stock's value." },
+]
+
+const SHARED_OPTION_COLUMNS_AFTER = [
+  { key: 'iv',            label: 'IV',       tip: "Implied Volatility — the market's annualised expected price swing baked into the option price." },
+  { key: 'open_interest', label: 'Open Int', tip: 'Open Interest — total number of outstanding contracts. Higher = more liquid.' },
+  { key: 'volume',        label: 'Volume',   tip: 'Contracts traded today. A real-time liquidity signal.' },
+]
+
 export const OPTIONS_TABLE = {
   columns: [
-    { key: 'return_multiple',    label: 'Return',        tip: 'Strike price divided by ask price. If the stock hits the strike at expiry, you receive this many times your investment back.' },
-    { key: 'prob_itm',           label: 'Prob ITM',      tip: 'Black-Scholes risk-neutral probability this put expires in-the-money. Options are ranked by Return x Prob ITM combined.' },
-    { key: 'expiry',             label: 'Expiry',        tip: 'Option expiration date. The put must expire in-the-money to have intrinsic value.' },
-    { key: 'strike',             label: 'Strike',        tip: 'The price the stock must fall below for this put to have intrinsic value at expiry.' },
-    { key: 'ask',                label: 'Ask',           tip: 'Current asking price per share. One contract = 100 shares, so multiply by 100 for total cost.' },
-    { key: 'contract_cost',      label: 'Contract Cost', tip: 'Total cost of one contract in USD (ask x 100 shares). This is the actual cash outlay.' },
-    { key: 'cost_pct',           label: 'Cost %',        tip: "Ask as a percentage of the current stock price. How much you are risking relative to the stock's value." },
-    { key: 'breakeven_drop_pct', label: 'BE Drop',       tip: 'Breakeven drop — how far the stock must fall for you to break even at expiry (strike minus ask, expressed as % below current price).' },
-    { key: 'iv',                 label: 'IV',            tip: "Implied Volatility — the market's annualised expected price swing baked into the option price." },
-    { key: 'open_interest',      label: 'Open Int',      tip: 'Open Interest — total number of outstanding contracts. Higher = more liquid.' },
-    { key: 'volume',             label: 'Volume',        tip: 'Contracts traded today. A real-time liquidity signal.' },
+    ...SHARED_OPTION_COLUMNS,
+    { key: 'breakeven_drop_pct', label: 'BE Drop', tip: 'Breakeven drop — how far the stock must fall for you to break even at expiry (strike minus ask, expressed as % below current price).' },
+    ...SHARED_OPTION_COLUMNS_AFTER,
   ],
-} as const
+}
 
 export const CALLS_OPTIONS_TABLE = {
   columns: [
-    { key: 'return_multiple',    label: 'Return',        tip: 'Strike price divided by ask price. A proxy for leverage — higher means more upside per dollar risked.' },
-    { key: 'prob_itm',           label: 'Prob ITM',      tip: 'Black-Scholes risk-neutral probability this call expires in-the-money. Options are ranked by Return x Prob ITM combined.' },
-    { key: 'expiry',             label: 'Expiry',        tip: 'Option expiration date. The call must expire in-the-money to have intrinsic value.' },
-    { key: 'strike',             label: 'Strike',        tip: 'The price the stock must exceed for this call to have intrinsic value at expiry.' },
-    { key: 'ask',                label: 'Ask',           tip: 'Current asking price per share. One contract = 100 shares, so multiply by 100 for total cost.' },
-    { key: 'contract_cost',      label: 'Contract Cost', tip: 'Total cost of one contract in USD (ask x 100 shares). This is the actual cash outlay.' },
-    { key: 'cost_pct',           label: 'Cost %',        tip: "Ask as a percentage of the current stock price. How much you are risking relative to the stock's value." },
-    { key: 'breakeven_rise_pct', label: 'BE Rise',       tip: 'Breakeven rise — how far the stock must rise for you to break even at expiry (strike plus ask, expressed as % above current price).' },
-    { key: 'iv',                 label: 'IV',            tip: "Implied Volatility — the market's annualised expected price swing baked into the option price." },
-    { key: 'open_interest',      label: 'Open Int',      tip: 'Open Interest — total number of outstanding contracts. Higher = more liquid.' },
-    { key: 'volume',             label: 'Volume',        tip: 'Contracts traded today. A real-time liquidity signal.' },
+    ...SHARED_OPTION_COLUMNS,
+    { key: 'breakeven_rise_pct', label: 'BE Rise', tip: 'Breakeven rise — how far the stock must rise for you to break even at expiry (strike plus ask, expressed as % above current price).' },
+    ...SHARED_OPTION_COLUMNS_AFTER,
   ],
-} as const
+}
 
 // Shared between puts and calls hero cards — labels, icons, and stat names are identical
 export const HERO_CARD = {

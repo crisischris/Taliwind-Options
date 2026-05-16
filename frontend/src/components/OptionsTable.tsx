@@ -46,17 +46,18 @@ export default function OptionsTable<T extends BaseOption>({
     }
   }
 
-  const sorted = [...options].sort((a, b) => {
-    if (!sortKey) return 0
-    const av = sortValue(a, sortKey, currentPrice)
-    const bv = sortValue(b, sortKey, currentPrice)
-    const an = parseFloat(String(av))
-    const bn = parseFloat(String(bv))
-    if (!isNaN(an) && !isNaN(bn)) return sortDir === 'desc' ? bn - an : an - bn
-    return sortDir === 'desc'
-      ? String(bv).localeCompare(String(av))
-      : String(av).localeCompare(String(bv))
-  })
+  const sorted = sortKey
+    ? [...options].sort((a, b) => {
+        const av = sortValue(a, sortKey, currentPrice)
+        const bv = sortValue(b, sortKey, currentPrice)
+        const an = parseFloat(String(av))
+        const bn = parseFloat(String(bv))
+        if (!isNaN(an) && !isNaN(bn)) return sortDir === 'desc' ? bn - an : an - bn
+        return sortDir === 'desc'
+          ? String(bv).localeCompare(String(av))
+          : String(av).localeCompare(String(bv))
+      })
+    : options
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -92,6 +93,7 @@ export default function OptionsTable<T extends BaseOption>({
           {sorted.map(o => {
             const costPct      = o.ask / currentPrice * 100
             const contractCost = o.ask * 100
+            const be           = getBreakeven(o)
             const isHero       = o.contract === heroContract
             const isNew        = prevContracts.size > 0 && !prevContracts.has(o.contract)
 
@@ -120,7 +122,7 @@ export default function OptionsTable<T extends BaseOption>({
                   ${contractCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{costPct.toFixed(2)}%</TableCell>
-                <TableCell className={beCls(getBreakeven(o))}>{getBreakeven(o).toFixed(1)}%</TableCell>
+                <TableCell className={beCls(be)}>{be.toFixed(1)}%</TableCell>
                 <TableCell className={ivCls(o.iv)}>{(o.iv * 100).toFixed(0)}%</TableCell>
                 <TableCell>{o.open_interest.toLocaleString()}</TableCell>
                 <TableCell>{o.volume != null ? o.volume.toLocaleString() : '—'}</TableCell>

@@ -1,0 +1,323 @@
+import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react'
+import { formatTimestamp, getScanLabel } from '@/utils/timestamp'
+import { useManifest, useReport } from '@/hooks/useReport'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { HERO_CARD } from '@/constants/strings'
+import HeroCardDeck from '@/components/HeroCardDeck'
+import ScanBadge from '@/components/ScanBadge'
+import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
+import type { BaseHeroOption } from '@/components/HeroCard'
+import type { PutTicker, CallTicker, BaseOption } from '@/types/report'
+
+type AnyTicker = PutTicker | CallTicker
+type HeroMap   = Record<'short' | 'long' | 'moonshot', { ticker: string; contract: string } | null>
+
+const HERO_TERMS = ['short', 'long', 'moonshot'] as const
+
+export interface ScanConfig {
+  base:          'puts' | 'calls'
+  heroIdPrefix:  string
+  moveLabel:     string
+  strings: {
+    title:       string
+    loading:     string
+    empty:       string
+    newOnly:     string
+    expandAll:   string
+    collapseAll: string
+    noNewItems:  string
+  }
+  columns:       readonly { key: string; label: string; tip: string }[]
+  FiltersSheet:  ComponentType
+  getOptions:    (t: AnyTicker) => BaseOption[]
+  getMovePct:    (t: AnyTicker) => number
+  getHeroMovePct:(h: BaseHeroOption | null) => number
+  getBreakeven:  (o: BaseOption) => number
+}
+
+function scrollTickerTabIntoView(ticker: string) {
+  document.getElementById(`ticker-tab-${ticker}`)
+    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+}
+
+function flashRow(rowId: string) {
+  const row = document.getElementById(rowId)
+  if (!row) return
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  row.classList.remove('hero-flash')
+  void row.offsetWidth
+  row.classList.add('hero-flash')
+}
+
+export default function ReportPage({ config }: { config: ScanConfig }) {
+  const { base, heroIdPrefix, moveLabel, strings } = config
+
+  const pendingHeroRef = useRef<string | null>(location.hash.slice(1).split(';')[1] ?? null)
+  const { manifest, error } = useManifest(base)
+  const [selectedId, setSelectedId]         = useState<string | null>(null)
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
+  const [newOnly, setNewOnly]               = useState(false)
+  const [expansion, setExpansion]           = useState<ExpansionOverride | null>(null)
+
+  useEffect(() => {
+    if (!manifest.length) return
+    const hashId = location.hash.slice(1).split(';')[0]
+    const target = manifest.find(m => m.id === hashId)?.id ?? manifest[0]?.id ?? null
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedId(target)
+  }, [manifest])
+
+  useEffect(() => {
+    function onHashChange() {
+      const id = location.hash.slice(1)
+      if (id && manifest.find(m => m.id === id)) setSelectedId(id)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [manifest])
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setSelectedTicker(null) }, [selectedId])
+
+  function selectReport(id: string) {
+    location.hash = id
+    setSelectedId(id)
+    setNewOnly(false)
+  }
+
+  const { report, diff } = useReport(base, selectedId, manifest)
+
+  const scrollToHero = useCallback((heroRowId: string) => {
+    if (report) {
+      const term = heroRowId.replace(`hero-${heroIdPrefix}`, '') as typeof HERO_TERMS[number]
+      const heroTicker = (report.heroes as unknown as HeroMap)[term]?.ticker
+      if (heroTicker) {
+        setSelectedTicker(heroTicker)
+        scrollTickerTabIntoView(heroTicker)
+      }
+    }
+    setExpansion(p => ({ open: true, v: (p?.v ?? 0) + 1 }))
+    setTimeout(() => flashRow(heroRowId), 50)
+  }, [report, heroIdPrefix])
+
+  // On first load from a deep-link hash (format: #puts;hero-short), scroll to the named hero row.
+  // useRef so consuming the pending value doesn't trigger a re-render.
+  useEffect(() => {
+    if (!pendingHeroRef.current || !report) return
+    const rowId = pendingHeroRef.current
+    pendingHeroRef.current = null
+    const term = rowId.replace(`hero-${heroIdPrefix}`, '') as typeof HERO_TERMS[number]
+    const heroTicker = (report.heroes as unknown as HeroMap)[term]?.ticker
+    setExpansion(p => ({ open: true, v: (p?.v ?? 0) + 1 }))
+    setTimeout(() => {
+      if (heroTicker) {
+        setSelectedTicker(heroTicker)
+        scrollTickerTabIntoView(heroTicker)
+      }
+      setTimeout(() => {
+        flashRow(rowId)
+        location.hash = base
+      }, 150)
+    }, 0)
+  }, [report, heroIdPrefix, base])
+
+  const heroes       = report?.heroes as unknown as HeroMap | undefined
+  const shortHero    = heroes?.short?.contract    ?? ''
+  const longHero     = heroes?.long?.contract     ?? ''
+  const moonshotHero = heroes?.moonshot?.contract ?? ''
+
+  const allTickers    = report ? (report.tickers as AnyTicker[]) : []
+  const scanLabel     = getScanLabel()
+
+  function tickerHasNewContent(t: AnyTicker) {
+    const isNew       = diff.prevTickers.size > 0 && !diff.prevTickers.has(t.ticker)
+    const hasNewOption = diff.prevContracts.size > 0 && config.getOptions(t).some(o => !diff.prevContracts.has(o.contract))
+    return isNew || hasNewOption
+  }
+
+  const hasNewItems    = allTickers.some(tickerHasNewContent)
+  const visibleTickers = newOnly ? allTickers.filter(tickerHasNewContent) : allTickers
+  const activeTicker   = visibleTickers.find(t => t.ticker === selectedTicker) ?? visibleTickers[0] ?? null
+
+  useEffect(() => {
+    if (activeTicker && activeTicker.ticker !== selectedTicker) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedTicker(activeTicker.ticker)
+    }
+  }, [activeTicker, selectedTicker])
+
+  // Diff summary
+  const optLabel     = base === 'puts' ? 'put' : 'call'
+  const diffPrevLabel = diff.prevReportId
+    ? formatTimestamp(diff.prevReportId.slice(diff.prevReportId.indexOf('-scan-') + 6))
+    : ''
+  const diffNewTickers = diff.prevContracts.size > 0 && report
+    ? allTickers.filter(t => !diff.prevTickers.has(t.ticker)).length : 0
+  const diffNewOptions = diff.prevContracts.size > 0 && report
+    ? allTickers.flatMap(t => config.getOptions(t)).filter(o => !diff.prevContracts.has(o.contract)).length : 0
+  const diffParts = (diff.prevContracts.size > 0 && report)
+    ? ([
+        diffNewTickers > 0 && `${diffNewTickers} new ticker${diffNewTickers !== 1 ? 's' : ''}`,
+        diffNewOptions > 0 && `${diffNewOptions} new ${optLabel}${diffNewOptions !== 1 ? 's' : ''}`,
+      ] as (string | false)[]).filter((x): x is string => Boolean(x))
+    : []
+
+  const heroCards = report
+    ? HERO_TERMS.map(term => ({
+        option:    (report.heroes as unknown as HeroMap)[term] as BaseHeroOption | null,
+        movePct:   config.getHeroMovePct((report.heroes as unknown as HeroMap)[term] as BaseHeroOption | null),
+        moveLabel,
+        label:     HERO_CARD[term].label,
+        icon:      HERO_CARD[term].icon,
+        heroRowId: `hero-${heroIdPrefix}${term}`,
+      }))
+    : []
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <p className="text-muted-foreground">{strings.empty}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto">
+
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{strings.title}</h1>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm mt-1">
+              {report && <ScanBadge />}
+              {report ? `Generated ${formatTimestamp(report.generated_at)}` : strings.loading}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 w-full sm:w-80 shrink-0">
+            <select
+              className={cn(
+                'rounded-md border border-input bg-card text-sm px-3 py-1.5',
+                'w-full focus:outline-none focus:ring-2 focus:ring-ring',
+              )}
+              value={selectedId ?? ''}
+              onChange={e => selectReport(e.target.value)}
+            >
+              {manifest.map(r => (
+                <option key={r.id} value={r.id}>
+                  {scanLabel} — {formatTimestamp(r.generated_at)} — {r.tickers_flagged} tickers
+                </option>
+              ))}
+            </select>
+            {diff.prevContracts.size > 0 && report && (
+              <p className="text-xs text-muted-foreground px-0.5">
+                vs <span className="font-mono">{diffPrevLabel}</span>
+                {' — '}
+                {diffParts.length > 0
+                  ? diffParts.map((p, i) => (
+                      <span key={i}>
+                        {i > 0 && ', '}
+                        <span className="font-semibold text-gain">{p}</span>
+                      </span>
+                    ))
+                  : strings.noNewItems
+                }
+              </p>
+            )}
+          </div>
+        </div>
+
+        {(report || !error) && (
+          <>
+            <div className="mb-8">
+              <HeroCardDeck
+                loading={!report}
+                cards={heroCards}
+                onHeroClick={scrollToHero}
+                desktopGrid
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 mb-0">
+              <config.FiltersSheet />
+              {hasNewItems && diff.prevContracts.size > 0 && (
+                <Button variant={newOnly ? 'secondary' : 'outline'} size="sm"
+                  onClick={() => setNewOnly(v => !v)}>
+                  {strings.newOnly}
+                </Button>
+              )}
+              <Button variant="outline" size="sm"
+                onClick={() => setExpansion(p => ({ open: true,  v: (p?.v ?? 0) + 1 }))}>
+                {strings.expandAll}
+              </Button>
+              <Button variant="outline" size="sm"
+                onClick={() => setExpansion(p => ({ open: false, v: (p?.v ?? 0) + 1 }))}>
+                {strings.collapseAll}
+              </Button>
+            </div>
+
+            <div className="border-b border-border mb-6 mt-3">
+              <div className="overflow-x-auto overflow-y-hidden">
+                <div className="flex min-w-max">
+                  {visibleTickers.map(t => {
+                    const isActive    = t.ticker === activeTicker?.ticker
+                    const isNewTicker = diff.prevTickers.size > 0 && !diff.prevTickers.has(t.ticker)
+                    const newCount    = diff.prevContracts.size > 0
+                      ? config.getOptions(t).filter(o => !diff.prevContracts.has(o.contract)).length
+                      : 0
+                    const movePct = config.getMovePct(t)
+                    return (
+                      <button
+                        key={t.ticker}
+                        id={`ticker-tab-${t.ticker}`}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-2.5 text-sm whitespace-nowrap',
+                          'border-b-2 -mb-px transition-colors',
+                          isActive
+                            ? 'border-primary text-foreground font-semibold'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
+                        )}
+                        onClick={() => setSelectedTicker(t.ticker)}
+                      >
+                        {t.ticker}
+                        <span className={cn('text-xs font-normal', movePct >= 0 ? 'text-gain' : 'text-loss')}>
+                          {movePct >= 0 ? '+' : ''}{Math.round(movePct)}% {moveLabel}
+                        </span>
+                        {isNewTicker && (
+                          <Badge variant="success" className="text-[9px] py-0 px-1 h-4 leading-none">NEW</Badge>
+                        )}
+                        {!isNewTicker && newCount > 0 && (
+                          <Badge variant="success" className="text-[9px] py-0 px-1 h-4 leading-none">{newCount}</Badge>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {activeTicker && (
+              <TickerCard
+                key={activeTicker.ticker}
+                ticker={activeTicker.ticker}
+                currentPrice={activeTicker.current_price}
+                options={config.getOptions(activeTicker)}
+                optionLabel={optLabel}
+                columns={config.columns}
+                getBreakeven={config.getBreakeven}
+                shortHero={{ contract: shortHero, rowId: `hero-${heroIdPrefix}short` }}
+                longHero={{ contract: longHero,   rowId: `hero-${heroIdPrefix}long` }}
+                moonshotHero={{ contract: moonshotHero, rowId: `hero-${heroIdPrefix}moonshot` }}
+                prevContracts={diff.prevContracts}
+                prevTickers={diff.prevTickers}
+                newOnly={newOnly}
+                expansionOverride={expansion}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

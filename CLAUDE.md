@@ -16,16 +16,22 @@ signals = [s for s in GainerPutScanner().check() if s.triggered]
 print(f'{len(signals)} signals found')
 "
 
-# Python: lint + unit tests (run both before pushing)
-ruff check .
-ruff format .
-python -m pytest tests/
+# Test batches (also available as make targets: test-fe, test-be, test-integration, test-e2e)
+
+# FE unit tests (Vitest)
+cd frontend && npm run test
+
+# BE unit tests
+python -m pytest tests/ -v
 
 # Integration tests (require deployed beta + AWS credentials)
 pip install -e . boto3 pytest
 pytest tests/integration/ -v --override-ini="addopts=" --tb=short
 
-# Frontend: full CI check — type-check, lint, and tests (run before pushing)
+# UI tests / e2e (Playwright — requires dev server or starts it automatically)
+cd frontend && npm run test:e2e
+
+# Frontend: full CI check — type-check, lint, and unit tests (run before pushing)
 cd frontend && npm run ci
 
 # Run the React dev server (proxies JSON reports from the Python server)
