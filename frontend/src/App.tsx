@@ -13,19 +13,18 @@ function getInitialTheme(): Theme {
   return 'dark'
 }
 
+// Hash format: "#page" or "#page;heroRowId" or "#put-scan-..." (report deep-link)
 function pageFromHash(): Page {
-  const hash = location.hash.slice(1)
-  // PutsPage/CallsPage write report IDs (e.g. "put-scan-2026-05-15_15-35") into the hash for
-  // deep-linking specific reports. Recognise those prefixes so sharing a report URL still lands
-  // on the right page.
-  if (hash === 'puts'  || hash.startsWith('put-scan-'))  return 'puts'
-  if (hash === 'calls' || hash.startsWith('call-scan-')) return 'calls'
-  if (hash === 'about') return 'about'
+  const segment = location.hash.slice(1).split(';')[0]
+  if (segment === 'puts'  || segment.startsWith('put-scan-'))  return 'puts'
+  if (segment === 'calls' || segment.startsWith('call-scan-')) return 'calls'
+  if (segment === 'about') return 'about'
   return 'home'
 }
 
-function navigate(page: Page) {
-  location.hash = page === 'home' ? '' : page
+function navigate(page: Page, heroRowId?: string) {
+  if (page === 'home') { location.hash = ''; return }
+  location.hash = heroRowId ? `${page};${heroRowId}` : page
 }
 
 export default function App() {
@@ -43,8 +42,8 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  function goTo(page: Page) {
-    navigate(page)
+  function goTo(page: Page, heroRowId?: string) {
+    navigate(page, heroRowId)
     setPage(page)
   }
 

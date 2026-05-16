@@ -1,3 +1,6 @@
+import json
+import pathlib
+
 import aws_cdk as cdk
 from aws_cdk import (
     aws_iam as iam,
@@ -16,6 +19,10 @@ from aws_cdk import (
 )
 from constructs import Construct
 from stage_config import StageConfig
+
+_SCHEDULE = json.loads(
+    (pathlib.Path(__file__).parent / "../frontend/src/config/scanSchedule.json").read_text()
+)
 
 
 class OptionsHunterStack(cdk.Stack):
@@ -107,7 +114,21 @@ class OptionsHunterStack(cdk.Stack):
             scheduler.CfnSchedule(
                 self,
                 "OpenScanSchedule",
-                schedule_expression="cron(31 9 ? * MON-FRI *)",
+                schedule_expression=f"cron({_SCHEDULE['openScanEt']['minute']} {_SCHEDULE['openScanEt']['hour']} ? * MON-FRI *)",
+                schedule_expression_timezone="America/New_York",
+                flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                    mode="OFF",
+                ),
+                target=scheduler.CfnSchedule.TargetProperty(
+                    arn=scanner_fn.function_arn,
+                    role_arn=scheduler_role.role_arn,
+                ),
+            )
+
+            scheduler.CfnSchedule(
+                self,
+                "MidayScanSchedule",
+                schedule_expression=f"cron({_SCHEDULE['middayScanEt']['minute']} {_SCHEDULE['middayScanEt']['hour']} ? * MON-FRI *)",
                 schedule_expression_timezone="America/New_York",
                 flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
                     mode="OFF",

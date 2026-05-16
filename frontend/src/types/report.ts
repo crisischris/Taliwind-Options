@@ -1,4 +1,4 @@
-export interface Put {
+export interface BaseOption {
   contract: string
   ticker: string
   expiry: string
@@ -6,13 +6,21 @@ export interface Put {
   ask: number
   return_multiple: number
   prob_itm: number
-  breakeven_drop_pct: number
   iv: number
   open_interest: number
   volume: number | null
   term: 'short' | 'long' | 'moonshot'
-  // present on hero puts only
+}
+
+export interface Put extends BaseOption {
+  breakeven_drop_pct: number
   gain_pct?: number
+  current_price?: number
+}
+
+export interface Call extends BaseOption {
+  breakeven_rise_pct: number
+  momentum_pct?: number
   current_price?: number
 }
 
@@ -24,27 +32,9 @@ export interface PutTicker {
 }
 
 export interface PutHeroes {
-  short: (Put & { gain_pct: number; current_price: number }) | null
-  long:  (Put & { gain_pct: number; current_price: number }) | null
+  short:    (Put & { gain_pct: number; current_price: number }) | null
+  long:     (Put & { gain_pct: number; current_price: number }) | null
   moonshot: (Put & { gain_pct: number; current_price: number }) | null
-}
-
-export interface Call {
-  contract: string
-  ticker: string
-  expiry: string
-  strike: number
-  ask: number
-  return_multiple: number
-  prob_itm: number
-  breakeven_rise_pct: number
-  iv: number
-  open_interest: number
-  volume: number | null
-  term: 'short' | 'long' | 'moonshot'
-  // present on hero calls only
-  momentum_pct?: number
-  current_price?: number
 }
 
 export interface CallTicker {
@@ -55,8 +45,8 @@ export interface CallTicker {
 }
 
 export interface CallHeroes {
-  short: (Call & { momentum_pct: number; current_price: number }) | null
-  long:  (Call & { momentum_pct: number; current_price: number }) | null
+  short:    (Call & { momentum_pct: number; current_price: number }) | null
+  long:     (Call & { momentum_pct: number; current_price: number }) | null
   moonshot: (Call & { momentum_pct: number; current_price: number }) | null
 }
 

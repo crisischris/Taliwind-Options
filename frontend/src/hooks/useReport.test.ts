@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useManifest, usePutsReport } from './useReport'
+import { useManifest, useReport } from './useReport'
 import type { ManifestEntry, PutsReport } from '../types/report'
 
 // ── test data ─────────────────────────────────────────────────────────────────
@@ -121,14 +121,14 @@ describe('useManifest', () => {
   })
 })
 
-// ── usePutsReport ─────────────────────────────────────────────────────────────
+// ── useReport ─────────────────────────────────────────────────────────────────
 
-describe('usePutsReport', () => {
+describe('useReport', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('does nothing when id is null', async () => {
     vi.stubGlobal('fetch', vi.fn())
-    const { result } = renderHook(() => usePutsReport(null, MANIFEST))
+    const { result } = renderHook(() => useReport('puts', null, MANIFEST))
     await act(async () => {})
     expect(result.current.report).toBeNull()
     expect(vi.mocked(fetch)).not.toHaveBeenCalled()
@@ -139,25 +139,25 @@ describe('usePutsReport', () => {
       'put-scan-2026-05-14_09-31.json': REPORT,
       'put-scan-2026-05-13_09-31.json': PREV_REPORT,
     })
-    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => useReport('puts', 'put-scan-2026-05-14_09-31', MANIFEST))
     await waitFor(() => expect(result.current.report).not.toBeNull())
 
     expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31')
     expect(result.current.diff.prevReportId).toBe('put-scan-2026-05-13_09-31')
-    expect(result.current.diff.prevPutTickers.has('MSFT')).toBe(true)
-    expect(result.current.diff.prevPutContracts.has('MSFT261219P00250000')).toBe(true)
+    expect(result.current.diff.prevTickers.has('MSFT')).toBe(true)
+    expect(result.current.diff.prevContracts.has('MSFT261219P00250000')).toBe(true)
   })
 
   it('sets empty diff when there is no previous report', async () => {
     mockFetch({ 'put-scan-2026-05-13_09-31.json': PREV_REPORT })
     // Only one entry in manifest — no prev
     const { result } = renderHook(() =>
-      usePutsReport('put-scan-2026-05-13_09-31', [MANIFEST[1]])
+      useReport('puts', 'put-scan-2026-05-13_09-31', [MANIFEST[1]])
     )
     await waitFor(() => expect(result.current.report).not.toBeNull())
     expect(result.current.diff.prevReportId).toBeNull()
-    expect(result.current.diff.prevPutContracts.size).toBe(0)
-    expect(result.current.diff.prevPutTickers.size).toBe(0)
+    expect(result.current.diff.prevContracts.size).toBe(0)
+    expect(result.current.diff.prevTickers.size).toBe(0)
   })
 
   it('handles prev report fetch failure gracefully', async () => {
@@ -168,7 +168,7 @@ describe('usePutsReport', () => {
       return Promise.reject(new Error('prev fetch failed'))
     }))
 
-    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => useReport('puts', 'put-scan-2026-05-14_09-31', MANIFEST))
     await waitFor(() => expect(result.current.report).not.toBeNull())
     expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31')
     expect(result.current.diff.prevReportId).toBeNull()
@@ -181,7 +181,7 @@ describe('usePutsReport', () => {
     })
 
     const { result, rerender } = renderHook(
-      ({ id }: { id: string }) => usePutsReport(id, MANIFEST),
+      ({ id }: { id: string }) => useReport('puts', id, MANIFEST),
       { initialProps: { id: 'put-scan-2026-05-14_09-31' } }
     )
     await waitFor(() => expect(result.current.report?.id).toBe('put-scan-2026-05-14_09-31'))
@@ -199,7 +199,7 @@ describe('usePutsReport', () => {
       json: () => reportPromise,
     })))
 
-    const { result } = renderHook(() => usePutsReport('put-scan-2026-05-14_09-31', MANIFEST))
+    const { result } = renderHook(() => useReport('puts', 'put-scan-2026-05-14_09-31', MANIFEST))
     expect(result.current.loading).toBe(true)
 
     act(() => resolveReport(REPORT))

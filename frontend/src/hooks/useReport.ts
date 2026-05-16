@@ -1,27 +1,15 @@
 import { useState, useEffect } from 'react'
 import type { ManifestEntry, PutsReport, CallsReport } from '../types/report'
 
-export interface PutsDiff {
-  prevPutContracts: Set<string>
-  prevPutTickers: Set<string>
+export interface ReportDiff {
+  prevContracts: Set<string>
+  prevTickers: Set<string>
   prevReportId: string | null
 }
 
-export interface CallsDiff {
-  prevCallContracts: Set<string>
-  prevCallTickers: Set<string>
-  prevReportId: string | null
-}
-
-const EMPTY_PUTS_DIFF: PutsDiff = {
-  prevPutContracts: new Set(),
-  prevPutTickers: new Set(),
-  prevReportId: null,
-}
-
-const EMPTY_CALLS_DIFF: CallsDiff = {
-  prevCallContracts: new Set(),
-  prevCallTickers: new Set(),
+const EMPTY_DIFF: ReportDiff = {
+  prevContracts: new Set(),
+  prevTickers: new Set(),
   prevReportId: null,
 }
 
@@ -39,9 +27,11 @@ export function useManifest(base: 'puts' | 'calls') {
   return { manifest, error }
 }
 
-export function usePutsReport(id: string | null, manifest: ManifestEntry[]) {
-  const [report, setReport] = useState<PutsReport | null>(null)
-  const [diff, setDiff] = useState<PutsDiff>(EMPTY_PUTS_DIFF)
+export function useReport(base: 'puts',  id: string | null, manifest: ManifestEntry[]): { report: PutsReport  | null; diff: ReportDiff; loading: boolean }
+export function useReport(base: 'calls', id: string | null, manifest: ManifestEntry[]): { report: CallsReport | null; diff: ReportDiff; loading: boolean }
+export function useReport(base: 'puts' | 'calls', id: string | null, manifest: ManifestEntry[]) {
+  const [report, setReport]   = useState<PutsReport | CallsReport | null>(null)
+  const [diff, setDiff]       = useState<ReportDiff>(EMPTY_DIFF)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -49,68 +39,29 @@ export function usePutsReport(id: string | null, manifest: ManifestEntry[]) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
 
-    const idx = manifest.findIndex(m => m.id === id)
+    const idx       = manifest.findIndex(m => m.id === id)
     const prevEntry = manifest[idx + 1] ?? null
 
-    const reportReq = fetch(`puts/${id}.json`).then(r => r.json() as Promise<PutsReport>)
-    const prevReq = prevEntry
-      ? fetch(`puts/${prevEntry.id}.json`)
-          .then(r => r.json() as Promise<PutsReport>)
-          .catch(() => null)
+    const reportReq = fetch(`${base}/${id}.json`).then(r => r.json())
+    const prevReq   = prevEntry
+      ? fetch(`${base}/${prevEntry.id}.json`).then(r => r.json()).catch(() => null)
       : Promise.resolve(null)
 
     Promise.all([reportReq, prevReq]).then(([data, prev]) => {
       setReport(data)
       if (prev) {
+        const tickers: { ticker: string; puts?: { contract: string }[]; calls?: { contract: string }[] }[] = prev.tickers
         setDiff({
-          prevPutContracts: new Set(prev.tickers.flatMap(t => t.puts.map(p => p.contract))),
-          prevPutTickers: new Set(prev.tickers.map(t => t.ticker)),
-          prevReportId: prevEntry!.id,
+          prevContracts: new Set(tickers.flatMap(t => (t.puts ?? t.calls ?? []).map(o => o.contract))),
+          prevTickers:   new Set(tickers.map(t => t.ticker)),
+          prevReportId:  prevEntry!.id,
         })
       } else {
-        setDiff(EMPTY_PUTS_DIFF)
+        setDiff(EMPTY_DIFF)
       }
       setLoading(false)
     })
-  }, [id, manifest])
-
-  return { report, diff, loading }
-}
-
-export function useCallsReport(id: string | null, manifest: ManifestEntry[]) {
-  const [report, setReport] = useState<CallsReport | null>(null)
-  const [diff, setDiff] = useState<CallsDiff>(EMPTY_CALLS_DIFF)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!id) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true)
-
-    const idx = manifest.findIndex(m => m.id === id)
-    const prevEntry = manifest[idx + 1] ?? null
-
-    const reportReq = fetch(`calls/${id}.json`).then(r => r.json() as Promise<CallsReport>)
-    const prevReq = prevEntry
-      ? fetch(`calls/${prevEntry.id}.json`)
-          .then(r => r.json() as Promise<CallsReport>)
-          .catch(() => null)
-      : Promise.resolve(null)
-
-    Promise.all([reportReq, prevReq]).then(([data, prev]) => {
-      setReport(data)
-      if (prev) {
-        setDiff({
-          prevCallContracts: new Set(prev.tickers.flatMap(t => t.calls.map(c => c.contract))),
-          prevCallTickers: new Set(prev.tickers.map(t => t.ticker)),
-          prevReportId: prevEntry!.id,
-        })
-      } else {
-        setDiff(EMPTY_CALLS_DIFF)
-      }
-      setLoading(false)
-    })
-  }, [id, manifest])
+  }, [id, base, manifest])
 
   return { report, diff, loading }
 }

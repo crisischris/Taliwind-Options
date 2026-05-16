@@ -31,21 +31,21 @@
   }
 
   .dark {
-    --background:   252 30% 6%;     /* near-black with violet character */
-    --foreground:   252 15% 92%;    /* near-white */
-    --card:         252 25% 11%;    /* dark violet card */
-    --card-foreground: 252 15% 92%;
-    --border:       252 22% 20%;
-    --input:        252 22% 20%;
+    --background:   230 25% 11%;    /* deep navy blue */
+    --foreground:   220 15% 92%;    /* near-white */
+    --card:         230 22% 15%;    /* slightly lighter navy card */
+    --card-foreground: 220 15% 92%;
+    --border:       230 20% 24%;
+    --input:        230 20% 24%;
     --ring:         252 100% 64%;   /* #6c47ff */
     --primary:      252 100% 64%;   /* #6c47ff */
     --primary-foreground: 0 0% 100%;
-    --secondary:    252 25% 18%;
-    --secondary-foreground: 252 15% 92%;
-    --muted:        252 25% 18%;
-    --muted-foreground: 252 15% 58%;
-    --accent:       252 25% 18%;
-    --accent-foreground: 252 15% 92%;
+    --secondary:    230 22% 22%;
+    --secondary-foreground: 220 15% 92%;
+    --muted:        230 22% 22%;
+    --muted-foreground: 220 15% 62%;
+    --accent:       230 22% 22%;
+    --accent-foreground: 220 15% 92%;
     --destructive:  0 63% 55%;
     --destructive-foreground: 252 15% 92%;
 

@@ -1,25 +1,33 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { HERO_CARD } from "@/constants/strings"
-import { ivCls, probCls } from "@/utils/colors"
-import type { Put } from "@/types/report"
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { HERO_CARD } from '@/constants/strings'
+import { ivCls, probCls } from '@/utils/colors'
 
-interface HeroPut extends Put {
-  gain_pct: number
+export interface BaseHeroOption {
+  contract: string
+  ticker: string
   current_price: number
+  return_multiple: number
+  prob_itm: number
+  ask: number
+  strike: number
+  expiry: string
+  iv: number
 }
 
 interface Props {
-  put: HeroPut | null
+  option: BaseHeroOption | null
+  movePct: number
+  moveLabel: string
   label: string
   icon: string
   heroRowId: string
   onScrollTo: (id: string) => void
 }
 
-export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Props) {
-  if (!put) return null
-  const contractCost = put.ask * 100
+export default function HeroCard({ option, movePct, moveLabel, label, icon, heroRowId, onScrollTo }: Props) {
+  if (!option) return null
+  const contractCost = option.ask * 100
 
   return (
     <Card
@@ -33,21 +41,21 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
         </div>
 
         <div className="flex flex-wrap items-baseline gap-4 mb-4">
-          <span className="text-gold text-5xl font-black tracking-tight">{put.ticker}</span>
+          <span className="text-gold text-5xl font-black tracking-tight">{option.ticker}</span>
           <Badge variant="gold" className="text-sm font-semibold">
-            +{Math.round(put.gain_pct)}% (1Y)
+            +{Math.round(movePct)}% {moveLabel}
           </Badge>
-          <span className="text-muted-foreground text-sm">@ ${put.current_price.toFixed(2)}</span>
+          <span className="text-muted-foreground text-sm">@ ${option.current_price.toFixed(2)}</span>
         </div>
 
         <div className="flex flex-wrap gap-6">
           <div>
-            <div className="text-gold text-4xl font-black">{Math.round(put.return_multiple)}x</div>
+            <div className="text-gold text-4xl font-black">{Math.round(option.return_multiple)}x</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.returnMultiple}</div>
           </div>
           <div>
-            <div className={`${probCls(put.prob_itm)} text-4xl font-black`}>
-              {(put.prob_itm * 100).toFixed(1)}%
+            <div className={`${probCls(option.prob_itm)} text-4xl font-black`}>
+              {(option.prob_itm * 100).toFixed(1)}%
             </div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.probItm}</div>
           </div>
@@ -55,7 +63,7 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
           <div className="hidden sm:block w-px bg-border self-stretch mx-2" />
 
           <div>
-            <div className="text-gain text-2xl font-bold">${put.ask.toFixed(2)}</div>
+            <div className="text-gain text-2xl font-bold">${option.ask.toFixed(2)}</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.askPerShare}</div>
           </div>
           <div>
@@ -65,20 +73,20 @@ export default function HeroCard({ put, label, icon, heroRowId, onScrollTo }: Pr
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.contractCost}</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">${Math.round(put.strike)}</div>
+            <div className="text-2xl font-bold">${Math.round(option.strike)}</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.strike}</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{put.expiry}</div>
+            <div className="text-2xl font-bold">{option.expiry}</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.expiry}</div>
           </div>
           <div>
-            <div className={`${ivCls(put.iv)} text-2xl font-bold`}>{(put.iv * 100).toFixed(0)}%</div>
+            <div className={`${ivCls(option.iv)} text-2xl font-bold`}>{(option.iv * 100).toFixed(0)}%</div>
             <div className="text-muted-foreground text-xs uppercase tracking-wide mt-1">{HERO_CARD.stats.iv}</div>
           </div>
         </div>
 
-        <div className="mt-3 font-mono text-xs text-muted-foreground/40">{put.contract}</div>
+        <div className="mt-3 font-mono text-xs text-muted-foreground/40">{option.contract}</div>
       </CardContent>
     </Card>
   )

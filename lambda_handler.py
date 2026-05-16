@@ -6,7 +6,7 @@ Single invocation that runs the put scanner and writes the JSON report + manifes
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import boto3
@@ -27,7 +27,7 @@ def handler(event: dict, context: Any) -> dict:
 
     bucket_name = os.environ["REPORTS_BUCKET"]
     s3 = boto3.client("s3")
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
 
     try:
         from indicators.call_universe import get_tickers
