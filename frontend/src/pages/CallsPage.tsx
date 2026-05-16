@@ -47,13 +47,21 @@ export default function CallsPage() {
 
   const { report, diff } = useReport('calls', selectedId, manifest)
 
+  function scrollTickerTabIntoView(ticker: string) {
+    document.getElementById(`ticker-tab-${ticker}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }
+
   const scrollToHero = useCallback((heroRowId: string) => {
     if (report) {
       const heroTicker =
         heroRowId === 'hero-call-short'    ? report.heroes.short?.ticker
         : heroRowId === 'hero-call-long'   ? report.heroes.long?.ticker
         : report.heroes.moonshot?.ticker
-      if (heroTicker) setSelectedTicker(heroTicker)
+      if (heroTicker) {
+        setSelectedTicker(heroTicker)
+        scrollTickerTabIntoView(heroTicker)
+      }
     }
     setExpansion(p => ({ open: true, v: (p?.v ?? 0) + 1 }))
     setTimeout(() => {
@@ -76,7 +84,10 @@ export default function CallsPage() {
       : report.heroes.moonshot?.ticker
     setExpansion(p => ({ open: true, v: (p?.v ?? 0) + 1 }))
     setTimeout(() => {
-      if (heroTicker) setSelectedTicker(heroTicker)
+      if (heroTicker) {
+        setSelectedTicker(heroTicker)
+        scrollTickerTabIntoView(heroTicker)
+      }
       setTimeout(() => {
         const row = document.getElementById(rowId)
         if (!row) return
@@ -182,17 +193,19 @@ export default function CallsPage() {
           </div>
         </div>
 
-        {report && (
+        {(report || !error) && (
           <>
             {/* Hero cards */}
             <div className="mb-8">
               <HeroCardDeck
-                cards={[
+                loading={!report}
+                cards={report ? [
                   { option: report.heroes.short,    movePct: report.heroes.short?.momentum_pct    ?? 0, moveLabel: '90d', label: HERO_CARD.short.label,    icon: HERO_CARD.short.icon,    heroRowId: 'hero-call-short'    },
                   { option: report.heroes.long,     movePct: report.heroes.long?.momentum_pct     ?? 0, moveLabel: '90d', label: HERO_CARD.long.label,     icon: HERO_CARD.long.icon,     heroRowId: 'hero-call-long'     },
                   { option: report.heroes.moonshot, movePct: report.heroes.moonshot?.momentum_pct ?? 0, moveLabel: '90d', label: HERO_CARD.moonshot.label, icon: HERO_CARD.moonshot.icon, heroRowId: 'hero-call-moonshot' },
-                ]}
+                ] : []}
                 onHeroClick={scrollToHero}
+                desktopGrid
               />
             </div>
 
@@ -228,6 +241,7 @@ export default function CallsPage() {
                     return (
                       <button
                         key={t.ticker}
+                        id={`ticker-tab-${t.ticker}`}
                         className={cn(
                           'flex items-center gap-1.5 px-3 py-2.5 text-sm whitespace-nowrap',
                           'border-b-2 -mb-px transition-colors',

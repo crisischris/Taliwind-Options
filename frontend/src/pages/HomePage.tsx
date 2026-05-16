@@ -53,8 +53,7 @@ export default function HomePage({ onNavigate }: Props) {
               </Button>
             </div>
             {callsError  && <p className="text-muted-foreground">{HOME_PAGE.callsEmpty}</p>}
-            {!callsError && !callsReport && <p className="text-muted-foreground">{HOME_PAGE.loading}</p>}
-            {!callsError && callsReport  && <HeroCardDeck cards={callsCards} onHeroClick={rowId => onNavigate('calls', rowId)} />}
+            {!callsError && <HeroCardDeck loading={!callsReport} cards={callsCards} onHeroClick={rowId => onNavigate('calls', rowId)} />}
           </section>
 
           <section>
@@ -68,8 +67,7 @@ export default function HomePage({ onNavigate }: Props) {
               </Button>
             </div>
             {putsError  && <p className="text-muted-foreground">{HOME_PAGE.putsEmpty}</p>}
-            {!putsError && !putsReport && <p className="text-muted-foreground">{HOME_PAGE.loading}</p>}
-            {!putsError && putsReport  && <HeroCardDeck cards={putsCards} onHeroClick={rowId => onNavigate('puts', rowId)} />}
+            {!putsError && <HeroCardDeck loading={!putsReport} cards={putsCards} onHeroClick={rowId => onNavigate('puts', rowId)} />}
           </section>
 
         </div>
