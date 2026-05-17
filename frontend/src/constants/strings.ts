@@ -149,6 +149,11 @@ export const HOME_PAGE = {
   callsEmpty:   'No call reports found.',
 } as const
 
+export const FOOTER = {
+  notFinancialAdvice: 'Not financial advice.',
+  mobileDisclaimer:   'Options trading involves significant risk and is not suitable for all investors.',
+} as const
+
 export const ABOUT_PAGE = {
   title: 'About',
   intro: `${APP_NAME} runs twice-daily scans to surface asymmetric options plays — cheap out-of-the-money puts on extreme gainers, and cheap calls on momentum names. Scans run at market open and midday ET. Reports are compared across runs to highlight what's new.`,

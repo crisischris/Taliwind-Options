@@ -18,7 +18,7 @@ export function useManifest(base: 'puts' | 'calls') {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch(`${base}/manifest.json`)
+    fetch(`${base}/manifest.json`, { cache: 'no-cache' })
       .then(r => r.json())
       .then(setManifest)
       .catch(() => setError(true))

@@ -110,5 +110,6 @@ def _write_manifest_to_s3(
         Key=key,
         Body=json.dumps(existing, indent=2),
         ContentType="application/json",
+        CacheControl="no-store",
     )
     log.info("%s updated (%d entries)", key, len(existing))
