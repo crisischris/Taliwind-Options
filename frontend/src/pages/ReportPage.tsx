@@ -92,6 +92,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
 
   const scrollToHero = useCallback((heroRowId: string) => {
     track('hero_card_clicked', { base, term: heroRowId.replace(`hero-${heroIdPrefix}`, '') })
+    setNewOnly(false)
     if (report) {
       const term = heroRowId.replace(`hero-${heroIdPrefix}`, '') as typeof HERO_TERMS[number]
       const heroTicker = (report.heroes as unknown as HeroMap)[term]?.ticker
