@@ -1,6 +1,7 @@
 import { Home, TrendingUp, TrendingDown, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NAVBAR } from '@/constants/strings'
+import { track } from '@/lib/analytics'
 import type { Page } from '@/components/Navbar'
 
 interface Props {
@@ -22,7 +23,7 @@ export default function BottomNav({ current, onChange }: Props) {
         {ITEMS.map(({ id, label, icon }) => (
           <button
             key={id}
-            onClick={() => onChange(id)}
+            onClick={() => { track('nav_clicked', { page: id, nav: 'bottom' }); onChange(id) }}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors',
               current === id ? 'text-primary' : 'text-muted-foreground',

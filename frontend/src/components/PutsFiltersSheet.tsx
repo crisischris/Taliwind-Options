@@ -1,6 +1,7 @@
 import { METHODOLOGY } from '@/constants/strings'
 import FiltersSheet from '@/components/FiltersSheet'
 import { FixedRule, EditableRule, NumberInput } from '@/components/FiltersSheetPrimitives'
+import { track } from '@/lib/analytics'
 
 const DEFAULTS = {
   minGainPct:  500,
@@ -17,6 +18,7 @@ export default function PutsFiltersSheet() {
     <FiltersSheet
       defaults={DEFAULTS}
       methodology={METHODOLOGY}
+      onOpen={() => track('filters_opened', { base: 'puts' })}
       renderRules={(filters, set, premium) => (
         <>
           <FixedRule rule="Universe" detail="S&P 500 and NASDAQ 100 constituents only — liquid, well-known names where options markets are active." />

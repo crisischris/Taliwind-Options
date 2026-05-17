@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react'
 import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
 import { HERO_CARD, HOME_PAGE } from '@/constants/strings'
+import { track } from '@/lib/analytics'
 import HeroCardDeck from '@/components/HeroCardDeck'
 import type { Page } from '@/components/Navbar'
 import type { DeckCard } from '@/components/HeroCardDeck'
@@ -48,7 +49,7 @@ export default function HomePage({ onNavigate }: Props) {
                 <TrendingUp className="h-5 w-5 text-primary" />
                 {HOME_PAGE.callsHeading}
               </h2>
-              <Button variant="outline" size="sm" onClick={() => onNavigate('calls')}>
+              <Button variant="outline" size="sm" onClick={() => { track('view_all_clicked', { base: 'calls' }); onNavigate('calls') }}>
                 {HOME_PAGE.viewAll}
               </Button>
             </div>
@@ -62,7 +63,7 @@ export default function HomePage({ onNavigate }: Props) {
                 <TrendingDown className="h-5 w-5 text-primary" />
                 {HOME_PAGE.putsHeading}
               </h2>
-              <Button variant="outline" size="sm" onClick={() => onNavigate('puts')}>
+              <Button variant="outline" size="sm" onClick={() => { track('view_all_clicked', { base: 'puts' }); onNavigate('puts') }}>
                 {HOME_PAGE.viewAll}
               </Button>
             </div>

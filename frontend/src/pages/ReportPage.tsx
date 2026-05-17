@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react'
+import { track } from '@/lib/analytics'
 import { formatTimestamp, getScanLabel } from '@/utils/timestamp'
 import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
@@ -90,6 +91,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
   const { report, diff } = useReport(base, selectedId, manifest)
 
   const scrollToHero = useCallback((heroRowId: string) => {
+    track('hero_card_clicked', { base, term: heroRowId.replace(`hero-${heroIdPrefix}`, '') })
     if (report) {
       const term = heroRowId.replace(`hero-${heroIdPrefix}`, '') as typeof HERO_TERMS[number]
       const heroTicker = (report.heroes as unknown as HeroMap)[term]?.ticker
@@ -202,7 +204,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                 'w-full focus:outline-none focus:ring-2 focus:ring-ring',
               )}
               value={selectedId ?? ''}
-              onChange={e => selectReport(e.target.value)}
+              onChange={e => { track('report_selected', { base, report_id: e.target.value }); selectReport(e.target.value) }}
             >
               {manifest.map(r => (
                 <option key={r.id} value={r.id}>
@@ -243,16 +245,16 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
               <config.FiltersSheet />
               {hasNewItems && diff.prevContracts.size > 0 && (
                 <Button variant={newOnly ? 'secondary' : 'outline'} size="sm"
-                  onClick={() => setNewOnly(v => !v)}>
+                  onClick={() => { track('new_only_toggled', { base, enabled: !newOnly }); setNewOnly(v => !v) }}>
                   {strings.newOnly}
                 </Button>
               )}
               <Button variant="outline" size="sm"
-                onClick={() => setExpansion(p => ({ open: true,  v: (p?.v ?? 0) + 1 }))}>
+                onClick={() => { track('expand_all_clicked', { base }); setExpansion(p => ({ open: true,  v: (p?.v ?? 0) + 1 })) }}>
                 {strings.expandAll}
               </Button>
               <Button variant="outline" size="sm"
-                onClick={() => setExpansion(p => ({ open: false, v: (p?.v ?? 0) + 1 }))}>
+                onClick={() => { track('collapse_all_clicked', { base }); setExpansion(p => ({ open: false, v: (p?.v ?? 0) + 1 })) }}>
                 {strings.collapseAll}
               </Button>
             </div>
@@ -278,7 +280,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                             ? 'border-primary text-foreground font-semibold'
                             : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
                         )}
-                        onClick={() => setSelectedTicker(t.ticker)}
+                        onClick={() => { track('ticker_tab_clicked', { base, ticker: t.ticker }); setSelectedTicker(t.ticker) }}
                       >
                         {t.ticker}
                         <span className={cn('text-xs font-normal', movePct >= 0 ? 'text-gain' : 'text-loss')}>

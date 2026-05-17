@@ -2,6 +2,7 @@ import React from 'react'
 import { Settings, TrendingUp, TrendingDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { APP_NAME, NAVBAR } from '@/constants/strings'
+import { track } from '@/lib/analytics'
 import logoLight from '@/assets/tailwind-options-logo.svg'
 import logoDark from '@/assets/tailwind-options-logo-dark.svg'
 
@@ -41,7 +42,7 @@ export default function Navbar({ current, onChange, onOpenSettings }: Props) {
               key={id}
               variant={current === id ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => onChange(id)}
+              onClick={() => { track('nav_clicked', { page: id, nav: 'top' }); onChange(id) }}
               className="flex items-center gap-1.5"
             >
               {icon}

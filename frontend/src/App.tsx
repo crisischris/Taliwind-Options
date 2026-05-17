@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import posthog from 'posthog-js'
+import { track } from './lib/analytics'
 import Navbar, { type Page } from './components/Navbar'
 import SettingsModal, { type Theme } from './components/SettingsModal'
 import HomePage from './pages/HomePage'
@@ -56,13 +57,14 @@ export default function App() {
 
   function toggleTheme() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    track('theme_toggled', { theme: next })
     setTheme(next)
     localStorage.setItem('theme', next)
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar current={page} onChange={goTo} onOpenSettings={() => setSettings(true)} />
+      <Navbar current={page} onChange={goTo} onOpenSettings={() => { track('settings_opened'); setSettings(true) }} />
       <main className="flex-1 [overflow-x:clip]">
         {page === 'home'  && <HomePage onNavigate={goTo} />}
         {page === 'puts'  && <PutsPage />}

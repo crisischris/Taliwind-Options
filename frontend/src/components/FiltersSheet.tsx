@@ -16,6 +16,7 @@ interface Methodology {
 interface Props<T extends Record<string, number>> {
   defaults: T
   methodology: Methodology
+  onOpen?: () => void
   renderRules: (
     filters: T,
     set: <K extends keyof T>(key: K, value: number) => void,
@@ -26,6 +27,7 @@ interface Props<T extends Record<string, number>> {
 export default function FiltersSheet<T extends Record<string, number>>({
   defaults,
   methodology,
+  onOpen,
   renderRules,
 }: Props<T>) {
   const [open, setOpen]       = useState(false)
@@ -39,7 +41,7 @@ export default function FiltersSheet<T extends Record<string, number>>({
   function reset() { setFilters(defaults) }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={v => { if (v) onOpen?.(); setOpen(v) }}>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <SlidersHorizontal className="h-3.5 w-3.5" />

@@ -1,6 +1,7 @@
 import { CALLS_METHODOLOGY } from '@/constants/strings'
 import FiltersSheet from '@/components/FiltersSheet'
 import { FixedRule, EditableRule, NumberInput } from '@/components/FiltersSheetPrimitives'
+import { track } from '@/lib/analytics'
 
 const DEFAULTS = {
   minMomentumPct:  15,
@@ -17,6 +18,7 @@ export default function CallsFiltersSheet() {
     <FiltersSheet
       defaults={DEFAULTS}
       methodology={CALLS_METHODOLOGY}
+      onOpen={() => track('filters_opened', { base: 'calls' })}
       renderRules={(filters, set, premium) => (
         <>
           <FixedRule rule="Universe" detail="Tickers held across ARKK, ARKX, ARKQ, SMH, AIQ, BOTZ, and ROKT ETFs — a cross-section of AI, semiconductors, robotics, and space plays." />
