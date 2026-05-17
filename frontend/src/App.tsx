@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import posthog from 'posthog-js'
 import Navbar, { type Page } from './components/Navbar'
 import SettingsModal, { type Theme } from './components/SettingsModal'
 import HomePage from './pages/HomePage'
@@ -37,6 +38,10 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
+
+  useEffect(() => {
+    posthog.capture('$pageview', { page })
+  }, [page])
 
   useEffect(() => {
     function onHashChange() { setPage(pageFromHash()) }
