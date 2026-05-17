@@ -35,6 +35,14 @@ def test_beta_disables_scheduler():
     assert StageConfig("beta").enable_scheduler is False
 
 
+def test_prod_has_domain():
+    assert StageConfig("prod").domain_name == "tailwindoptions.com"
+
+
+def test_beta_has_no_domain():
+    assert StageConfig("beta").domain_name is None
+
+
 def test_invalid_stage_raises():
     with pytest.raises(ValueError, match="must be one of"):
         StageConfig("staging")

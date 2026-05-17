@@ -27,3 +27,8 @@ class StageConfig:
     def enable_scheduler(self) -> bool:
         """Daily cron runs in prod only; beta is invoked directly by CI integration tests."""
         return self.stage == "prod"
+
+    @property
+    def domain_name(self) -> str | None:
+        """Custom domain for prod only. Beta uses the S3 website URL."""
+        return "tailwindoptions.com" if self.stage == "prod" else None

@@ -3,18 +3,15 @@ import pathlib
 
 import aws_cdk as cdk
 from aws_cdk import (
+    aws_certificatemanager as acm,
+    aws_cloudfront as cloudfront,
+    aws_cloudfront_origins as origins,
     aws_iam as iam,
-)
-from aws_cdk import (
     aws_lambda as lambda_,
-)
-from aws_cdk import (
+    aws_route53 as route53,
+    aws_route53_targets as targets,
     aws_s3 as s3,
-)
-from aws_cdk import (
     aws_s3_deployment as s3_deploy,
-)
-from aws_cdk import (
     aws_scheduler as scheduler,
 )
 from constructs import Construct
@@ -30,10 +27,6 @@ class TailwindOptionsStack(cdk.Stack):
         super().__init__(scope, id, **kwargs)
 
         # ── S3: report storage + static site ──────────────────────────────────
-        # NOTE: prod was previously deployed as bucket "tailwind-options-reports"
-        # (stack "TailwindOptionsStack"). The new prod bucket is
-        # "tailwind-options-reports-prod". On first prod deploy, copy any reports
-        # you want to keep from the old bucket before tearing down the old stack.
 
         bucket = s3.Bucket(
             self,
@@ -139,10 +132,97 @@ class TailwindOptionsStack(cdk.Stack):
                 ),
             )
 
+        # ── CloudFront + custom domain: prod only ─────────────────────────────
+
+        site_url = bucket.bucket_website_url
+
+        if config.domain_name:
+            hosted_zone = route53.HostedZone.from_lookup(
+                self, "HostedZone",
+                domain_name=config.domain_name,
+            )
+
+            certificate = acm.Certificate(
+                self, "Certificate",
+                domain_name=config.domain_name,
+                subject_alternative_names=[f"www.{config.domain_name}"],
+                validation=acm.CertificateValidation.from_dns(hosted_zone),
+            )
+
+            # Redirect www → apex at the edge
+            www_redirect_fn = cloudfront.Function(
+                self, "WwwRedirect",
+                code=cloudfront.FunctionCode.from_inline(
+                    "function handler(event){"
+                    "var h=event.request.headers.host.value;"
+                    f"if(h.startsWith('www.')){{return{{statusCode:301,"
+                    f"statusDescription:'Moved Permanently',"
+                    f"headers:{{location:{{value:'https://{config.domain_name}'+event.request.uri}}}}}};}}"
+                    "return event.request;}"
+                ),
+            )
+
+            s3_origin = origins.HttpOrigin(
+                bucket.bucket_website_domain_name,
+                protocol_policy=cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+            )
+
+            distribution = cloudfront.Distribution(
+                self, "Distribution",
+                domain_names=[config.domain_name, f"www.{config.domain_name}"],
+                certificate=certificate,
+                default_root_object="index.html",
+                default_behavior=cloudfront.BehaviorOptions(
+                    origin=s3_origin,
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+                    function_associations=[cloudfront.FunctionAssociation(
+                        function=www_redirect_fn,
+                        event_type=cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    )],
+                ),
+                additional_behaviors={
+                    # Content-hashed filenames — safe to cache aggressively
+                    "/assets/*": cloudfront.BehaviorOptions(
+                        origin=s3_origin,
+                        viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                        cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
+                    ),
+                },
+                # Return index.html for unknown paths so React hash routing works
+                error_responses=[
+                    cloudfront.ErrorResponse(
+                        http_status=403,
+                        response_page_path="/index.html",
+                        response_http_status=200,
+                    ),
+                    cloudfront.ErrorResponse(
+                        http_status=404,
+                        response_page_path="/index.html",
+                        response_http_status=200,
+                    ),
+                ],
+            )
+
+            route53.ARecord(
+                self, "ApexARecord",
+                zone=hosted_zone,
+                target=route53.RecordTarget.from_alias(targets.CloudFrontTarget(distribution)),
+            )
+
+            route53.ARecord(
+                self, "WwwARecord",
+                zone=hosted_zone,
+                record_name="www",
+                target=route53.RecordTarget.from_alias(targets.CloudFrontTarget(distribution)),
+            )
+
+            site_url = f"https://{config.domain_name}"
+
         # ── Outputs ───────────────────────────────────────────────────────────
 
         cdk.CfnOutput(self, "Stage",               value=config.stage)
-        cdk.CfnOutput(self, "SiteUrl",             value=bucket.bucket_website_url)
+        cdk.CfnOutput(self, "SiteUrl",             value=site_url)
         cdk.CfnOutput(self, "BucketName",          value=bucket.bucket_name)
         cdk.CfnOutput(self, "ScannerFunctionArn",  value=scanner_fn.function_arn)
         cdk.CfnOutput(self, "ScannerFunctionName", value=scanner_fn.function_name)
