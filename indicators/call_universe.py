@@ -67,16 +67,23 @@ def get_tickers(s3: Any = None, bucket: str | None = None) -> list[str]:
 
 def _fetch_from_yf() -> list[str]:
     tickers: set[str] = set()
+    names: dict[str, str] = {}
     for etf in _UNIVERSE_ETFS:
         try:
             holdings = yf.Ticker(etf).funds_data.top_holdings
             count = 0
-            for sym in holdings.index:
-                sym = str(sym).strip()
+            for sym, row in holdings.iterrows():
+                sym = str(sym).strip().replace(".", "-")
                 if sym and sym not in ("-", "nan", "None"):
                     tickers.add(sym)
                     count += 1
+                    name = str(row.get("Name", "") or "").strip()
+                    if name:
+                        names[sym] = name
             logger.info("%s: %d tickers fetched via Yahoo Finance", etf, count)
         except Exception as e:
             logger.error("Failed to fetch %s holdings: %s", etf, e)
+    if names:
+        existing = cache.get("company_names") or {}
+        cache.set("company_names", {**names, **existing})
     return sorted(tickers)
