@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import HeroCard from '@/components/HeroCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,7 @@ function HeroCardSkeleton() {
       <div className="flex items-center gap-3">
         <Skeleton className="h-7 w-7 rounded-full" />
         <Skeleton className="h-3 w-24" />
+        <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-muted-foreground/50" />
       </div>
       <div className="flex items-baseline gap-3">
         <Skeleton className="h-10 w-20" />

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useManifest, useReport } from './useReport'
+import { useManifest, useReport, clearReportCache } from './useReport'
 import type { ManifestEntry, PutsReport } from '../types/report'
 
 // ── test data ─────────────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ function mockFetch(responses: Record<string, unknown>) {
 // ── useManifest ───────────────────────────────────────────────────────────────
 
 describe('useManifest', () => {
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => { clearReportCache(); vi.unstubAllGlobals() })
 
   it('fetches manifest with cache: no-cache', async () => {
     mockFetch({ 'puts/manifest.json': MANIFEST })
@@ -133,7 +133,7 @@ describe('useManifest', () => {
 // ── useReport ─────────────────────────────────────────────────────────────────
 
 describe('useReport', () => {
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => { clearReportCache(); vi.unstubAllGlobals() })
 
   it('does nothing when id is null', async () => {
     vi.stubGlobal('fetch', vi.fn())
