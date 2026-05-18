@@ -16,11 +16,12 @@ export const SETTINGS = {
 
 // Shared between puts and calls ticker cards — labels and icons are identical
 export const TICKER_CARD = {
-  short:    { label: '⚡ Short-Dated < 6 months'       },
-  long:     { label: '🚀 Long-Dated / LEAPs 6+ months' },
-  moonshot: { label: '🎰 Moonshots — return only'      },
-  expand:   'expand',
-  collapse: 'collapse',
+  short:       { label: '⚡ Short-Dated < 6 months'       },
+  long:        { label: '🚀 Long-Dated / LEAPs 6+ months' },
+  moonshot:    { label: '🎰 Moonshots — return only'      },
+  expand:      'expand',
+  collapse:    'collapse',
+  priceAtScan: 'Price at Scan',
 } as const
 
 const SHARED_OPTION_COLUMNS = [

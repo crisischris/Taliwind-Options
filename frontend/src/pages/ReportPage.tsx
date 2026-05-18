@@ -304,6 +304,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
               <TickerCard
                 key={activeTicker.ticker}
                 ticker={activeTicker.ticker}
+                companyName={activeTicker.company_name}
                 currentPrice={activeTicker.current_price}
                 options={config.getOptions(activeTicker)}
                 optionLabel={optLabel}

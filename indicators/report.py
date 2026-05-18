@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .sources.base import Signal
+from .universe import get_company_names
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ def _build_puts_report(put_signals: list[Signal], report_id: str, timestamp: str
     )
 
     all_tickers = list(dict.fromkeys(list(by_short) + list(by_long) + list(by_moonshot)))
+    company_names = get_company_names()
 
     return {
         "id": report_id,
@@ -89,6 +91,7 @@ def _build_puts_report(put_signals: list[Signal], report_id: str, timestamp: str
         "tickers": [
             {
                 "ticker": t,
+                "company_name": company_names.get(t),
                 "gain_pct": _first_signal(t, by_short, by_long, by_moonshot).data["gain_pct"],
                 "current_price": _first_signal(t, by_short, by_long, by_moonshot).data["current_price"],
                 "puts": [
@@ -127,6 +130,7 @@ def _build_calls_report(call_signals: list[Signal], report_id: str, timestamp: s
     )
 
     all_tickers = list(dict.fromkeys(list(by_short) + list(by_long) + list(by_moonshot)))
+    company_names = get_company_names()
 
     return {
         "id": report_id,
@@ -145,6 +149,7 @@ def _build_calls_report(call_signals: list[Signal], report_id: str, timestamp: s
         "tickers": [
             {
                 "ticker": t,
+                "company_name": company_names.get(t),
                 "momentum_pct": _first_signal(t, by_short, by_long, by_moonshot).data["momentum_pct"],
                 "current_price": _first_signal(t, by_short, by_long, by_moonshot).data["current_price"],
                 "calls": [

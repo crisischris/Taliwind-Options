@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ExternalLink } from 'lucide-react'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,7 @@ export interface HeroRef {
 
 interface Props<T extends BaseOption> {
   ticker: string
+  companyName?: string
   currentPrice: number
   options: T[]
   optionLabel: string
@@ -34,7 +35,7 @@ interface Props<T extends BaseOption> {
 }
 
 export default function TickerCard<T extends BaseOption>({
-  ticker, currentPrice, options, optionLabel,
+  ticker, companyName, currentPrice, options, optionLabel,
   columns, getBreakeven,
   shortHero, longHero, moonshotHero,
   prevContracts, prevTickers, newOnly, expansionOverride,
@@ -61,8 +62,19 @@ export default function TickerCard<T extends BaseOption>({
   return (
     <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+        {companyName && (
+          <a
+            href={`https://finance.yahoo.com/quote/${ticker}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            {companyName}
+            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+          </a>
+        )}
         <span className="text-muted-foreground text-sm">
-          Current: <span className="font-medium text-foreground">${currentPrice.toFixed(2)}</span>
+          {TICKER_CARD.priceAtScan}: <span className="font-medium text-foreground">${currentPrice.toFixed(2)}</span>
         </span>
         {isNewTicker && (
           <Badge variant="success" className="font-bold text-[10px]">NEW TICKER</Badge>

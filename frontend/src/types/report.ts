@@ -26,6 +26,7 @@ export interface Call extends BaseOption {
 
 export interface PutTicker {
   ticker: string
+  company_name?: string
   gain_pct: number
   current_price: number
   puts: Put[]
@@ -39,6 +40,7 @@ export interface PutHeroes {
 
 export interface CallTicker {
   ticker: string
+  company_name?: string
   momentum_pct: number
   current_price: number
   calls: Call[]
