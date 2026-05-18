@@ -28,6 +28,8 @@ def get_tickers(s3: Any = None, bucket: str | None = None) -> list[str]:
     """Return deduplicated sorted list of tickers held across the call universe ETFs.
 
     Check order: file cache → S3 → Yahoo Finance. Writes back to file cache and S3.
+    S3 format: {"tickers": [...], "names": {...}} — plain-list entries are treated as
+    stale (pre-names) and trigger a fresh yfinance fetch.
     """
     cached = cache.get("call_universe")
     if cached is not None:
@@ -38,34 +40,43 @@ def get_tickers(s3: Any = None, bucket: str | None = None) -> list[str]:
         s3_key = _S3_KEY_TPL.format(date=date.today().isoformat())
         try:
             obj = s3.get_object(Bucket=bucket, Key=s3_key)
-            tickers = json.loads(obj["Body"].read())
-            logger.info("Call universe: S3 cache hit (%d tickers)", len(tickers))
-            cache.set("call_universe", tickers)
-            return tickers
+            payload = json.loads(obj["Body"].read())
+            if isinstance(payload, dict):
+                tickers = payload["tickers"]
+                _merge_etf_names(payload.get("names", {}))
+                logger.info("Call universe: S3 cache hit (%d tickers)", len(tickers))
+                cache.set("call_universe", tickers)
+                return tickers
+            logger.info("Call universe: S3 entry is old format — re-fetching to capture names")
         except Exception as e:
             logger.info("Call universe: S3 miss or read failed (%s) — fetching from Yahoo Finance", e)
 
-    tickers = _fetch_from_yf()
+    tickers, names = _fetch_from_yf()
 
     if tickers:
         cache.set("call_universe", tickers)
+        _merge_etf_names(names)
         if s3 and bucket:
             try:
-                s3_key = _S3_KEY_TPL.format(date=date.today().isoformat())
                 s3.put_object(
                     Bucket=bucket,
-                    Key=s3_key,
-                    Body=json.dumps(tickers),
+                    Key=_S3_KEY_TPL.format(date=date.today().isoformat()),
+                    Body=json.dumps({"tickers": tickers, "names": names}),
                     ContentType="application/json",
                 )
-                logger.info("Call universe cached to S3 (%d tickers)", len(tickers))
+                logger.info("Call universe cached to S3 (%d tickers, %d names)", len(tickers), len(names))
             except Exception as e:
                 logger.warning("Call universe: S3 write failed: %s", e)
 
     return tickers
 
 
-def _fetch_from_yf() -> list[str]:
+def _merge_etf_names(etf_names: dict[str, str]) -> None:
+    existing = cache.get("company_names") or {}
+    cache.set("company_names", {**etf_names, **existing})
+
+
+def _fetch_from_yf() -> tuple[list[str], dict[str, str]]:
     tickers: set[str] = set()
     names: dict[str, str] = {}
     for etf in _UNIVERSE_ETFS:
@@ -83,7 +94,4 @@ def _fetch_from_yf() -> list[str]:
             logger.info("%s: %d tickers fetched via Yahoo Finance", etf, count)
         except Exception as e:
             logger.error("Failed to fetch %s holdings: %s", etf, e)
-    if names:
-        existing = cache.get("company_names") or {}
-        cache.set("company_names", {**names, **existing})
-    return sorted(tickers)
+    return sorted(tickers), names

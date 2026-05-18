@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
 from io import StringIO
-from pathlib import Path
 
 import httpx
 import pandas as pd
@@ -13,7 +11,6 @@ from . import cache
 logger = logging.getLogger(__name__)
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; tailwind-options-bot/1.0)"}
-_STATIC_NAMES_PATH = Path(__file__).parent / "data" / "company_names.json"
 
 
 def _read_html(url: str) -> list:
@@ -54,25 +51,16 @@ def get_universe() -> list[str]:
 
     result = list(dict.fromkeys(tickers))
     cache.set("universe", result)
-    cache.set("company_names", names)
+    # Merge Wikipedia names on top of any ETF names already in cache (ETF names are the floor)
+    existing = cache.get("company_names") or {}
+    cache.set("company_names", {**existing, **names})
     logger.info("Universe: %d unique tickers total", len(result))
     return result
-
-
-def _load_static_names() -> dict[str, str]:
-    try:
-        return json.loads(_STATIC_NAMES_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
 
 
 def get_company_names() -> dict[str, str]:
     cached = cache.get("company_names")
     if cached is not None:
         return cached
-    static = _load_static_names()
-    get_universe()  # adds S&P 500 and NASDAQ 100 names as a side effect
-    live = cache.get("company_names") or {}
-    merged = {**static, **live}  # live names take priority; static fills gaps (e.g. ETF-only tickers)
-    cache.set("company_names", merged)
-    return merged
+    get_universe()  # populates company_names with S&P 500 + NASDAQ 100 names
+    return cache.get("company_names") or {}
