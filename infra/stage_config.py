@@ -32,3 +32,16 @@ class StageConfig:
     def domain_name(self) -> str | None:
         """Custom domain for prod only. Beta uses the S3 website URL."""
         return "tailwindoptions.com" if self.stage == "prod" else None
+
+    @property
+    def enable_monitoring(self) -> bool:
+        """CloudWatch alarms + SNS alerts in prod only."""
+        return self.stage == "prod"
+
+    @property
+    def alert_email(self) -> str:
+        return "chrnelsn.general@gmail.com"
+
+    @property
+    def alert_phone(self) -> str:
+        return "+19522972768"

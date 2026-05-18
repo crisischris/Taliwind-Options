@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { mockReports, PUT_TICKER_AAPL, PUT_TICKER_MSFT, CALL_TICKER_NVDA } from './fixtures'
+import { mockReports, mockReportsWithDiff, PUT_TICKER_AAPL, PUT_TICKER_MSFT, CALL_TICKER_NVDA } from './fixtures'
 import {
   HERO_CARD,
   PUTS_PAGE,
@@ -9,6 +9,28 @@ import {
   METHODOLOGY,
   CALLS_METHODOLOGY,
 } from '../src/constants/strings'
+
+// ── New Only + hero click bug fix ─────────────────────────────────────────────
+
+test('hero card click clears new only filter and shows ticker', async ({ page }) => {
+  await mockReportsWithDiff(page)
+  await page.goto('/#puts')
+
+  // New Only button appears once diff data loads
+  const newOnlyBtn = page.getByRole('button', { name: PUTS_PAGE.newOnly })
+  await expect(newOnlyBtn).toBeVisible()
+  await newOnlyBtn.click()
+
+  // MSFT is new; AAPL is not — only MSFT tab visible
+  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_MSFT.ticker) })).toBeVisible()
+  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).not.toBeVisible()
+
+  // Click the short hero (AAPL) — should clear newOnly
+  await page.locator('.md\\:grid').getByText(HERO_CARD.short.label).click()
+
+  // newOnly cleared: AAPL tab now visible
+  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).toBeVisible()
+})
 
 test.beforeEach(async ({ page }) => {
   await mockReports(page)

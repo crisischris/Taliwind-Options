@@ -197,6 +197,14 @@ def test_write_manifest_prepends_to_existing():
     assert written[1]["id"] == "put-scan-old"
 
 
+def test_write_manifest_sets_cache_control():
+    mock_s3 = _make_s3()
+    log = MagicMock()
+    _write_manifest_to_s3(mock_s3, "my-bucket", "puts/manifest.json", "put-scan-001", {"tickers_flagged": 1}, "ts", log)
+    call = next(c for c in mock_s3.put_object.call_args_list if c.kwargs["Key"] == "puts/manifest.json")
+    assert call.kwargs["CacheControl"] == "no-store"
+
+
 def test_write_report_sets_content_type():
     signals = [make_signal("AAPL", term="short")]
     mock_s3 = _make_s3()

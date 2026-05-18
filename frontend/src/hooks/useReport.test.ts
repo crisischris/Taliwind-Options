@@ -89,6 +89,15 @@ function mockFetch(responses: Record<string, unknown>) {
 describe('useManifest', () => {
   afterEach(() => vi.unstubAllGlobals())
 
+  it('fetches manifest with cache: no-cache', async () => {
+    mockFetch({ 'puts/manifest.json': MANIFEST })
+    renderHook(() => useManifest('puts'))
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('puts/manifest.json'),
+      { cache: 'no-cache' }
+    ))
+  })
+
   it('returns manifest on success', async () => {
     mockFetch({ 'puts/manifest.json': MANIFEST })
     const { result } = renderHook(() => useManifest('puts'))

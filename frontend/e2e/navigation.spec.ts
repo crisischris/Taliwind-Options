@@ -8,6 +8,7 @@ import {
   PUTS_PAGE,
   CALLS_PAGE,
   ABOUT_PAGE,
+  FOOTER,
 } from '../src/constants/strings'
 
 test.beforeEach(async ({ page }) => {
@@ -71,6 +72,11 @@ test('mobile bottom nav navigates pages', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.locator('nav.fixed button', { hasText: NAVBAR.puts }).click()
   await expect(page.getByRole('heading', { name: PUTS_PAGE.title })).toBeVisible()
+})
+
+test('mobile disclaimer is visible on small screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('main').getByText(FOOTER.notFinancialAdvice)).toBeVisible()
 })
 
 test('settings modal opens and closes', async ({ page }) => {

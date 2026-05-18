@@ -98,6 +98,41 @@ const CALLS_REPORT = {
   tickers: [CALL_TICKER_NVDA],
 }
 
+const PUTS_MANIFEST_WITH_PREV = [
+  { id: 'put-scan-2026-05-14_09-31', generated_at: '2026-05-14_09-31', tickers_flagged: 2 },
+  { id: 'put-scan-2026-05-13_09-31', generated_at: '2026-05-13_09-31', tickers_flagged: 1 },
+]
+
+// Previous report has only AAPL — MSFT is new in the current scan
+const PUTS_PREV_REPORT = {
+  id: 'put-scan-2026-05-13_09-31',
+  generated_at: '2026-05-13_09-31',
+  summary: { tickers_flagged: 1, short_puts: 1, long_puts: 0, moonshot_puts: 0 },
+  heroes: {
+    short: { ...PUT_TICKER_AAPL.puts[0], gain_pct: 620, current_price: 210.5 },
+    long: null,
+    moonshot: null,
+  },
+  tickers: [PUT_TICKER_AAPL],
+}
+
+export async function mockReportsWithDiff(page: Page) {
+  await page.route('**/puts/**', async route => {
+    const url = route.request().url()
+    if (url.includes('manifest')) {
+      await route.fulfill({ json: PUTS_MANIFEST_WITH_PREV })
+    } else if (url.includes('2026-05-13')) {
+      await route.fulfill({ json: PUTS_PREV_REPORT })
+    } else {
+      await route.fulfill({ json: PUTS_REPORT })
+    }
+  })
+  await page.route('**/calls/**', async route => {
+    const url = route.request().url()
+    await route.fulfill({ json: url.includes('manifest') ? CALLS_MANIFEST : CALLS_REPORT })
+  })
+}
+
 export async function mockReports(page: Page) {
   await page.route('**/puts/**', async route => {
     const url = route.request().url()

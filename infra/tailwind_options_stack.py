@@ -6,6 +6,8 @@ from aws_cdk import (
     aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
+    aws_cloudwatch as cloudwatch,
+    aws_cloudwatch_actions as cloudwatch_actions,
     aws_iam as iam,
     aws_lambda as lambda_,
     aws_route53 as route53,
@@ -13,6 +15,8 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
     aws_scheduler as scheduler,
+    aws_sns as sns,
+    aws_sns_subscriptions as subscriptions,
 )
 from constructs import Construct
 from stage_config import StageConfig
@@ -135,6 +139,7 @@ class TailwindOptionsStack(cdk.Stack):
         # ── CloudFront + custom domain: prod only ─────────────────────────────
 
         site_url = bucket.bucket_website_url
+        distribution = None
 
         if config.domain_name:
             hosted_zone = route53.HostedZone.from_lookup(
@@ -218,6 +223,69 @@ class TailwindOptionsStack(cdk.Stack):
             )
 
             site_url = f"https://{config.domain_name}"
+
+        # ── Monitoring: prod only ─────────────────────────────────────────────
+
+        if config.enable_monitoring:
+            alert_topic = sns.Topic(self, "AlertTopic", topic_name="tailwind-options-alerts")
+            alert_topic.add_subscription(subscriptions.EmailSubscription(config.alert_email))
+            alert_topic.add_subscription(subscriptions.SmsSubscription(config.alert_phone))
+
+            alarm_action = cloudwatch_actions.SnsAction(alert_topic)
+
+            cloudwatch.Alarm(
+                self, "LambdaErrorAlarm",
+                alarm_name="tailwind-options-lambda-errors",
+                alarm_description="Lambda scanner threw an error",
+                metric=scanner_fn.metric_errors(period=cdk.Duration.minutes(5), statistic="Sum"),
+                threshold=1,
+                evaluation_periods=1,
+                comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+                treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+            ).add_alarm_action(alarm_action)
+
+            cloudwatch.Alarm(
+                self, "LambdaDurationAlarm",
+                alarm_name="tailwind-options-lambda-duration",
+                alarm_description="Lambda scanner avg duration > 8 min (timeout is 10 min)",
+                metric=scanner_fn.metric_duration(period=cdk.Duration.minutes(5), statistic="Average"),
+                threshold=480_000,  # 8 minutes in milliseconds
+                evaluation_periods=1,
+                comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+                treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+            ).add_alarm_action(alarm_action)
+
+            cloudwatch.Alarm(
+                self, "MissedScanAlarm",
+                alarm_name="tailwind-options-missed-scan",
+                alarm_description="Scanner did not run — no invocations in 13 hours",
+                metric=scanner_fn.metric_invocations(period=cdk.Duration.hours(13), statistic="Sum"),
+                threshold=1,
+                evaluation_periods=1,
+                comparison_operator=cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+                treat_missing_data=cloudwatch.TreatMissingData.BREACHING,
+            ).add_alarm_action(alarm_action)
+
+            if distribution:
+                cloudwatch.Alarm(
+                    self, "CloudFront5xxAlarm",
+                    alarm_name="tailwind-options-cloudfront-5xx",
+                    alarm_description="CloudFront 5xx error rate > 5%",
+                    metric=cloudwatch.Metric(
+                        namespace="AWS/CloudFront",
+                        metric_name="5xxErrorRate",
+                        dimensions_map={
+                            "DistributionId": distribution.distribution_id,
+                            "Region": "Global",
+                        },
+                        statistic="Average",
+                        period=cdk.Duration.minutes(5),
+                    ),
+                    threshold=5,
+                    evaluation_periods=2,
+                    comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+                    treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+                ).add_alarm_action(alarm_action)
 
         # ── Outputs ───────────────────────────────────────────────────────────
 
