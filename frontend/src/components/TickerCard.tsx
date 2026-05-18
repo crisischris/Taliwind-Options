@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ChevronDown, ExternalLink } from 'lucide-react'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -86,10 +86,12 @@ export default function TickerCard<T extends BaseOption>({
         )}
         <div className="ml-auto flex gap-1">
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
+            aria-label="Expand all sections"
             onClick={() => setOpen({ short: true, long: true, moonshot: true })}>
             {TICKER_CARD.expand}
           </Button>
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-50 hover:opacity-90"
+            aria-label="Collapse all sections"
             onClick={() => setOpen({ short: false, long: false, moonshot: false })}>
             {TICKER_CARD.collapse}
           </Button>
@@ -142,21 +144,20 @@ interface TermSectionProps {
 function TermSection({ label, labelCls, headerCls, count, open, onToggle, borderTop, children }: TermSectionProps) {
   return (
     <Collapsible open={open} onOpenChange={onToggle}>
-      <div
+      <CollapsibleTrigger
         className={cn(
-          'flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none bg-muted/40',
+          'flex w-full items-center gap-2 px-4 py-2.5 select-none bg-muted/40 text-left',
           borderTop && 'border-t border-border',
           open && 'border-b border-border',
           headerCls,
         )}
-        onClick={() => onToggle(!open)}
       >
         <span className={cn('text-xs font-semibold uppercase tracking-wider text-muted-foreground', labelCls)}>
           {label}
         </span>
         <span className="text-xs font-normal text-muted-foreground/60">({count})</span>
-        <ChevronDown className={cn('h-3 w-3 ml-auto text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
-      </div>
+        <ChevronDown aria-hidden="true" className={cn('h-3 w-3 ml-auto text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
+      </CollapsibleTrigger>
       <CollapsibleContent>{children}</CollapsibleContent>
     </Collapsible>
   )

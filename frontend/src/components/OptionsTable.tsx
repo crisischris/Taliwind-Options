@@ -67,17 +67,20 @@ export default function OptionsTable<T extends BaseOption>({
             {columns.map(col => (
               <TableHead
                 key={col.key}
+                scope="col"
+                aria-sort={sortKey === col.key ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                 className="cursor-pointer hover:text-foreground select-none"
                 onClick={() => handleSort(col.key)}
               >
                 <span className="inline-flex items-center gap-1">
                   {col.label}
                   {sortKey === col.key && (
-                    <span className="text-xs">{sortDir === 'desc' ? '↓' : '↑'}</span>
+                    <span aria-hidden="true" className="text-xs">{sortDir === 'desc' ? '↓' : '↑'}</span>
                   )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info
+                        aria-hidden="true"
                         className="h-3.5 w-3.5 opacity-30 hover:opacity-70 cursor-help transition-opacity"
                         onClick={e => e.stopPropagation()}
                       />
@@ -109,7 +112,7 @@ export default function OptionsTable<T extends BaseOption>({
                 data-new={isNew ? 'true' : undefined}
               >
                 <TableCell className="font-bold text-lg">
-                  {Math.round(o.return_multiple)}x{isHero ? ' 👑' : ''}
+                  {Math.round(o.return_multiple)}x{isHero ? <span aria-label="top pick"> 👑</span> : ''}
                   {isNew && (
                     <Badge variant="success" className="ml-1.5 text-[10px] py-0 px-1.5 align-middle">NEW</Badge>
                   )}

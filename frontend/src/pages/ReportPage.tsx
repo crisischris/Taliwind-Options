@@ -204,6 +204,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                 'rounded-md border border-input bg-card text-sm px-3 py-1.5',
                 'w-full focus:outline-none focus:ring-2 focus:ring-ring',
               )}
+              aria-label="Select report"
               value={selectedId ?? ''}
               onChange={e => { track('report_selected', { base, report_id: e.target.value }); selectReport(e.target.value) }}
             >
@@ -214,7 +215,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
               ))}
             </select>
             {diff.prevContracts.size > 0 && report && (
-              <p className="text-xs text-muted-foreground px-0.5">
+              <p aria-live="polite" aria-atomic="true" className="text-xs text-muted-foreground px-0.5">
                 vs <span className="font-mono">{diffPrevLabel}</span>
                 {' — '}
                 {diffParts.length > 0
@@ -246,6 +247,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
               <config.FiltersSheet />
               {hasNewItems && diff.prevContracts.size > 0 && (
                 <Button variant={newOnly ? 'secondary' : 'outline'} size="sm"
+                  aria-pressed={newOnly}
                   onClick={() => { track('new_only_toggled', { base, enabled: !newOnly }); setNewOnly(v => !v) }}>
                   {strings.newOnly}
                 </Button>
@@ -262,7 +264,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
 
             <div className="border-b border-border mb-6 mt-3">
               <div className="overflow-x-auto overflow-y-hidden">
-                <div className="flex min-w-max">
+                <div role="tablist" aria-label="Tickers" className="flex min-w-max">
                   {visibleTickers.map(t => {
                     const isActive    = t.ticker === activeTicker?.ticker
                     const isNewTicker = diff.prevTickers.size > 0 && !diff.prevTickers.has(t.ticker)
@@ -273,7 +275,10 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                     return (
                       <button
                         key={t.ticker}
+                        role="tab"
                         id={`ticker-tab-${t.ticker}`}
+                        aria-selected={isActive}
+                        aria-controls="ticker-panel"
                         className={cn(
                           'flex items-center gap-1.5 px-3 py-2.5 text-sm whitespace-nowrap',
                           'border-b-2 -mb-px transition-colors',
@@ -301,6 +306,11 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
             </div>
 
             {activeTicker && (
+              <div
+                role="tabpanel"
+                id="ticker-panel"
+                aria-labelledby={`ticker-tab-${activeTicker.ticker}`}
+              >
               <TickerCard
                 key={activeTicker.ticker}
                 ticker={activeTicker.ticker}
@@ -318,6 +328,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                 newOnly={newOnly}
                 expansionOverride={expansion}
               />
+              </div>
             )}
           </>
         )}

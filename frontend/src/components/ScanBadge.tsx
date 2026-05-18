@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/badge'
 import { getScanLabel } from '@/utils/timestamp'
 
-function SunriseIcon({ className }: { className?: string }) {
+function SunriseIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" className={className}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" className={className} aria-hidden={ariaHidden}
       fill="none" stroke="currentColor" strokeLinecap="round">
       <line x1="10" y1="52" x2="90" y2="52" strokeWidth="2" />
       <path d="M22,52 A28,28 0 0,1 78,52" strokeWidth="2.5" />
@@ -16,9 +16,9 @@ function SunriseIcon({ className }: { className?: string }) {
   )
 }
 
-function MiddayIcon({ className }: { className?: string }) {
+function MiddayIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" className={className}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" className={className} aria-hidden={ariaHidden}
       fill="none" stroke="currentColor" strokeLinecap="round">
       <line x1="10" y1="68" x2="90" y2="68" strokeWidth="2" />
       <circle cx="50" cy="42" r="18" strokeWidth="2.5" />
@@ -40,8 +40,8 @@ export default function ScanBadge() {
   return (
     <Badge variant={isMorning ? 'gold' : 'secondary'} className="gap-1.5">
       {isMorning
-        ? <SunriseIcon className="h-3.5 w-auto" />
-        : <MiddayIcon  className="h-3.5 w-auto" />}
+        ? <SunriseIcon aria-hidden="true" className="h-3.5 w-auto" />
+        : <MiddayIcon  aria-hidden="true" className="h-3.5 w-auto" />}
       {label}
     </Badge>
   )

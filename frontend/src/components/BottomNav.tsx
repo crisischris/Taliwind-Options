@@ -23,13 +23,14 @@ export default function BottomNav({ current, onChange }: Props) {
         {ITEMS.map(({ id, label, icon }) => (
           <button
             key={id}
+            aria-current={current === id ? 'page' : undefined}
             onClick={() => { track('nav_clicked', { page: id, nav: 'bottom' }); onChange(id) }}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors',
               current === id ? 'text-primary' : 'text-muted-foreground',
             )}
           >
-            {icon}
+            <span aria-hidden="true">{icon}</span>
             {label}
           </button>
         ))}

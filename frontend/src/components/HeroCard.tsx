@@ -34,8 +34,12 @@ export default function HeroCard({ option, movePct, moveLabel, label, icon, hero
 
   return (
     <Card
-      className="h-full border-2 border-gold/40 bg-gradient-to-br from-gold/10 to-card shadow-lg shadow-gold/10 cursor-pointer hover:border-gold/60 transition-colors"
+      role="button"
+      tabIndex={0}
+      aria-label={`${label}: ${option.ticker}. Click to jump to this option in the table.`}
+      className="h-full border-2 border-gold/40 bg-gradient-to-br from-gold/10 to-card shadow-lg shadow-gold/10 cursor-pointer hover:border-gold/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={() => onScrollTo(heroRowId)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onScrollTo(heroRowId) } }}
     >
       <CardContent className="p-5 h-full flex flex-col">
         <div className="flex items-center gap-3 mb-2">

@@ -46,3 +46,6 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Analytics
 - would it be fun to have an analytics page that mirros post hog?
+
+## Accessibility
+- screen reader pass etc

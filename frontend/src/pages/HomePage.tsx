@@ -43,10 +43,10 @@ export default function HomePage({ onNavigate }: Props) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-          <section>
+          <section aria-label={HOME_PAGE.callsHeading}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="flex items-center gap-2 text-xl font-bold">
-                <TrendingUp className="h-5 w-5 text-primary" />
+                <TrendingUp aria-hidden="true" className="h-5 w-5 text-primary" />
                 {HOME_PAGE.callsHeading}
               </h2>
               <Button variant="outline" size="sm" onClick={() => { track('view_all_clicked', { base: 'calls' }); onNavigate('calls') }}>
@@ -57,10 +57,10 @@ export default function HomePage({ onNavigate }: Props) {
             {!callsError && <HeroCardDeck loading={!callsReport} cards={callsCards} onHeroClick={rowId => onNavigate('calls', rowId)} />}
           </section>
 
-          <section>
+          <section aria-label={HOME_PAGE.putsHeading}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="flex items-center gap-2 text-xl font-bold">
-                <TrendingDown className="h-5 w-5 text-primary" />
+                <TrendingDown aria-hidden="true" className="h-5 w-5 text-primary" />
                 {HOME_PAGE.putsHeading}
               </h2>
               <Button variant="outline" size="sm" onClick={() => { track('view_all_clicked', { base: 'puts' }); onNavigate('puts') }}>
