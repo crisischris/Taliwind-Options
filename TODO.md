@@ -43,3 +43,6 @@ Priority scale: 0 = highest, 5 = lowest
 
 ## Alarms
 - alarms and push notifications on critical exceptions etc.
+
+## Analytics
+- would it be fun to have an analytics page that mirros post hog?
