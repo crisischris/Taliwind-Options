@@ -70,12 +70,9 @@ def get_company_names() -> dict[str, str]:
     cached = cache.get("company_names")
     if cached is not None:
         return cached
-    get_universe()  # populates company_names as a side effect
-    live = cache.get("company_names") or {}
-    if live:
-        return live
-    # Wikipedia fetch failed — fall back to static snapshot
     static = _load_static_names()
-    if static:
-        logger.warning("Using static company name fallback (%d names)", len(static))
-    return static
+    get_universe()  # adds S&P 500 and NASDAQ 100 names as a side effect
+    live = cache.get("company_names") or {}
+    merged = {**static, **live}  # live names take priority; static fills gaps (e.g. ETF-only tickers)
+    cache.set("company_names", merged)
+    return merged
