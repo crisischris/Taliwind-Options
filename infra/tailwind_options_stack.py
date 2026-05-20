@@ -74,7 +74,7 @@ class TailwindOptionsStack(cdk.Stack):
                             "mkdir -p /asset-output/.tmp",
                             "TMPDIR=/asset-output/.tmp pip install python-dotenv httpx 'yfinance>=0.2' lxml -t /asset-output --quiet",
                             "rm -rf /asset-output/.tmp",
-                            "cp -r indicators lambda_handler.py /asset-output",
+                            "cp -r tailwind_options lambda_handler.py /asset-output",
                         ]),
                     ],
                 ),

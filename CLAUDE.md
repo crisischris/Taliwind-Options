@@ -11,7 +11,7 @@ git config core.hooksPath .githooks  # enables pre-push test gate
 
 # Invoke the scanner locally (runs a full scan, no S3 write)
 python -c "
-from indicators.sources.gainer_puts import GainerPutScanner
+from tailwind_options.sources.gainer_puts import GainerPutScanner
 signals = [s for s in GainerPutScanner().check() if s.triggered]
 print(f'{len(signals)} signals found')
 "
@@ -49,18 +49,18 @@ This is a Lambda-based scanner that runs daily at 9:31 AM ET (prod only), finds 
 **Entry point — `lambda_handler.py`**
 AWS Lambda handler. Runs the scanner, writes JSON report + manifest to S3. Uses `context.aws_request_id` prefixed on every log line for CloudWatch querying.
 
-**Core abstractions (`indicators/sources/base.py`)**
+**Core abstractions (`tailwind_options/sources/base.py`)**
 - `Indicator` — abstract base class; subclasses implement `check() -> list[Signal]`
 - `Signal` — dataclass returned by `check()`; has `triggered`, `title`, `message`, `subtitle`, `data`
 
-**Scanner (`indicators/sources/gainer_puts.py`)**
+**Scanner (`tailwind_options/sources/gainer_puts.py`)**
 - `GainerPutScanner` — fetches 1-year history for the universe, finds gainers above threshold, scans option chains for qualifying puts, scores by return × prob ITM
 
-**Reports (`indicators/report.py`)**
+**Reports (`tailwind_options/report.py`)**
 - `_build_report(signals, report_id, timestamp)` — builds the JSON structure written to S3
 - Locally: `generate_and_open(signals)` writes JSON to `reports/` and opens the dev server
 
-**Config (`indicators/config.py`)**
+**Config (`tailwind_options/config.py`)**
 - All settings read from env vars. Key vars: `GAINER_MIN_GAIN_PCT`, `GAINER_PUT_MAX_COST_PCT`, `GAINER_PUT_MAX_IV`, `GAINER_PUT_MIN_OI`, `GAINER_PUT_MIN_DTE`, `GAINER_PUT_MAX_DTE`
 
 **Frontend (`frontend/`)**
@@ -76,8 +76,8 @@ AWS Lambda handler. Runs the scanner, writes JSON report + manifest to S3. Uses 
 
 ## Adding a new indicator
 
-1. Create `indicators/sources/myindicator.py` — subclass `Indicator`, implement `check() -> list[Signal]`
-2. Export it from `indicators/sources/__init__.py`
+1. Create `tailwind_options/sources/myindicator.py` — subclass `Indicator`, implement `check() -> list[Signal]`
+2. Export it from `tailwind_options/sources/__init__.py`
 3. Call it in `lambda_handler.py`
 
 ---

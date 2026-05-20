@@ -5,7 +5,7 @@ import math
 
 import pytest
 
-from indicators.report import (
+from tailwind_options.report import (
     _build_calls_report,
     _build_puts_report,
     _call_to_dict,

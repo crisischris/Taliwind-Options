@@ -1,7 +1,7 @@
 import importlib
 
-import indicators.config as config_mod
-from indicators.config import Config
+import tailwind_options.config as config_mod
+from tailwind_options.config import Config
 
 
 def test_defaults():

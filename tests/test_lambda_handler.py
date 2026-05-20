@@ -59,9 +59,9 @@ def _make_context(request_id="test-req-001"):
 def test_handler_no_signals():
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client"):
-            with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.call_universe.get_tickers", return_value=[]):
-                    with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
+            with patch("tailwind_options.sources.gainer_puts.GainerPutScanner") as MockScanner:
+                with patch("tailwind_options.call_universe.get_tickers", return_value=[]):
+                    with patch("tailwind_options.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = []
                         MockCallScanner.return_value.check.return_value = []
                         result = handler({}, _make_context())
@@ -76,9 +76,9 @@ def test_handler_with_signals():
 
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client", return_value=mock_s3):
-            with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.call_universe.get_tickers", return_value=[]):
-                    with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
+            with patch("tailwind_options.sources.gainer_puts.GainerPutScanner") as MockScanner:
+                with patch("tailwind_options.call_universe.get_tickers", return_value=[]):
+                    with patch("tailwind_options.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = signals
                         MockCallScanner.return_value.check.return_value = []
                         result = handler({}, _make_context())
@@ -90,7 +90,7 @@ def test_handler_with_signals():
 def test_handler_returns_500_on_exception():
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client"):
-            with patch("indicators.sources.gainer_puts.GainerPutScanner", side_effect=RuntimeError("boom")):
+            with patch("tailwind_options.sources.gainer_puts.GainerPutScanner", side_effect=RuntimeError("boom")):
                 result = handler({}, _make_context())
 
     assert result["statusCode"] == 500
@@ -105,9 +105,9 @@ def test_handler_filters_untriggered_signals():
 
     with patch.dict("os.environ", {"REPORTS_BUCKET": "test-bucket"}):
         with patch("lambda_handler.boto3.client", return_value=mock_s3):
-            with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                with patch("indicators.call_universe.get_tickers", return_value=[]):
-                    with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
+            with patch("tailwind_options.sources.gainer_puts.GainerPutScanner") as MockScanner:
+                with patch("tailwind_options.call_universe.get_tickers", return_value=[]):
+                    with patch("tailwind_options.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                         MockScanner.return_value.check.return_value = [triggered, untriggered]
                         MockCallScanner.return_value.check.return_value = []
                         result = handler({}, _make_context())
@@ -119,9 +119,9 @@ def test_handler_uses_request_id_in_log(caplog):
     with caplog.at_level(logging.INFO):
         with patch.dict("os.environ", {"REPORTS_BUCKET": "bucket"}):
             with patch("lambda_handler.boto3.client"):
-                with patch("indicators.sources.gainer_puts.GainerPutScanner") as MockScanner:
-                    with patch("indicators.call_universe.get_tickers", return_value=[]):
-                        with patch("indicators.sources.trend_calls.TrendCallScanner") as MockCallScanner:
+                with patch("tailwind_options.sources.gainer_puts.GainerPutScanner") as MockScanner:
+                    with patch("tailwind_options.call_universe.get_tickers", return_value=[]):
+                        with patch("tailwind_options.sources.trend_calls.TrendCallScanner") as MockCallScanner:
                             MockScanner.return_value.check.return_value = []
                             MockCallScanner.return_value.check.return_value = []
                             handler({}, _make_context("my-unique-id"))

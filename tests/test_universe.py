@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import indicators.cache as cache_mod
-from indicators import cache
-from indicators.universe import _read_html, get_universe
+import tailwind_options.cache as cache_mod
+from tailwind_options import cache
+from tailwind_options.universe import _read_html, get_universe
 
 # ── fixtures ─────────────────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ NASDAQ_HTML = """<table><tr><th>Ticker</th></tr><tr><td>AAPL</td></tr><tr><td>NV
 
 def test_read_html_returns_list_of_dataframes():
     html = "<table><tr><th>A</th></tr><tr><td>1</td></tr></table>"
-    with patch("indicators.universe.httpx.get") as mock_get:
+    with patch("tailwind_options.universe.httpx.get") as mock_get:
         mock_get.return_value = _mock_response(html)
         result = _read_html("http://example.com")
     assert isinstance(result, list)
@@ -40,7 +40,7 @@ def test_read_html_returns_list_of_dataframes():
 
 
 def test_read_html_raises_on_http_error():
-    with patch("indicators.universe.httpx.get") as mock_get:
+    with patch("tailwind_options.universe.httpx.get") as mock_get:
         mock_get.return_value.raise_for_status.side_effect = Exception("404")
         with pytest.raises(Exception):
             _read_html("http://example.com")
@@ -58,7 +58,7 @@ def test_fetches_and_deduplicates(tmp_path):
     sp = pd.DataFrame({"Symbol": ["AAPL", "MSFT"]})
     nq = pd.DataFrame({"Ticker": ["AAPL", "NVDA"]})  # AAPL duplicate
 
-    with patch("indicators.universe._read_html") as mock_html:
+    with patch("tailwind_options.universe._read_html") as mock_html:
         mock_html.side_effect = [[sp], [None, None, None, None, None, nq]]
         result = get_universe()
 
@@ -72,7 +72,7 @@ def test_caches_result_after_fetch():
     sp = pd.DataFrame({"Symbol": ["AAPL"]})
     nq = pd.DataFrame({"Ticker": ["NVDA"]})
 
-    with patch("indicators.universe._read_html") as mock_html:
+    with patch("tailwind_options.universe._read_html") as mock_html:
         mock_html.side_effect = [[sp], [None, None, None, None, None, nq]]
         get_universe()
 
@@ -82,7 +82,7 @@ def test_caches_result_after_fetch():
 def test_sp500_fetch_fails_continues(tmp_path):
     nq = pd.DataFrame({"Ticker": ["NVDA"]})
 
-    with patch("indicators.universe._read_html") as mock_html:
+    with patch("tailwind_options.universe._read_html") as mock_html:
         def side_effect(url):
             if "S%26P" in url:
                 raise Exception("network error")
@@ -96,7 +96,7 @@ def test_sp500_fetch_fails_continues(tmp_path):
 def test_nasdaq_fetch_fails_continues():
     sp = pd.DataFrame({"Symbol": ["AAPL"]})
 
-    with patch("indicators.universe._read_html") as mock_html:
+    with patch("tailwind_options.universe._read_html") as mock_html:
         def side_effect(url):
             if "Nasdaq" in url:
                 raise Exception("network error")
@@ -108,7 +108,7 @@ def test_nasdaq_fetch_fails_continues():
 
 
 def test_both_fail_returns_empty():
-    with patch("indicators.universe._read_html", side_effect=Exception("fail")):
+    with patch("tailwind_options.universe._read_html", side_effect=Exception("fail")):
         result = get_universe()
     assert result == []
 
@@ -117,7 +117,7 @@ def test_dot_in_symbol_replaced_with_dash():
     sp = pd.DataFrame({"Symbol": ["BRK.B", "AAPL"]})
     nq = pd.DataFrame({"Ticker": []})
 
-    with patch("indicators.universe._read_html") as mock_html:
+    with patch("tailwind_options.universe._read_html") as mock_html:
         mock_html.side_effect = [[sp], [None, None, None, None, None, nq]]
         result = get_universe()
 

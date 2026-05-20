@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import indicators.cache as cache_mod
-from indicators import cache
-from indicators.sources.gainer_puts import (
+import tailwind_options.cache as cache_mod
+from tailwind_options import cache
+from tailwind_options.sources.gainer_puts import (
     _TERM_BOUNDARY_DAYS,
     GainerPutScanner,
     _norm_cdf,
@@ -167,20 +167,20 @@ def test_find_gainers_skips_zero_start_price():
 
 def test_find_gainers_download_failure_returns_empty():
     scanner = GainerPutScanner(universe=["AAPL"])
-    with patch("indicators.sources.gainer_puts.yf.download", side_effect=Exception("network error")):
+    with patch("tailwind_options.sources.gainer_puts.yf.download", side_effect=Exception("network error")):
         gainers = scanner._find_gainers(500.0)
     assert gainers == []
 
 
 def test_find_gainers_fetches_and_caches():
     download_result = _make_yf_download(["AAPL"], [(10.0, 70.0)])
-    with patch("indicators.sources.gainer_puts.yf.download", return_value=download_result) as mock_dl:
+    with patch("tailwind_options.sources.gainer_puts.yf.download", return_value=download_result) as mock_dl:
         scanner = GainerPutScanner(universe=["AAPL"])
         scanner._find_gainers(500.0)
         mock_dl.assert_called_once()
 
     # Second call should hit cache, not download again
-    with patch("indicators.sources.gainer_puts.yf.download") as mock_dl2:
+    with patch("tailwind_options.sources.gainer_puts.yf.download") as mock_dl2:
         scanner._find_gainers(500.0)
         mock_dl2.assert_not_called()
 
@@ -195,7 +195,7 @@ def _setup_scanner_with_expirations(monkeypatch, expirations, puts_df):
     mock_chain.puts = puts_df
     mock_ticker.option_chain.return_value = mock_chain
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
     return signals
@@ -204,7 +204,7 @@ def _setup_scanner_with_expirations(monkeypatch, expirations, puts_df):
 def test_scan_puts_no_expirations_in_window():
     mock_ticker = MagicMock()
     mock_ticker.options = []
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
     assert signals == []
@@ -219,7 +219,7 @@ def test_scan_puts_produces_signals():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -236,7 +236,7 @@ def test_scan_puts_short_term_assignment():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -253,7 +253,7 @@ def test_scan_puts_long_term_assignment():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -270,7 +270,7 @@ def test_scan_puts_filters_itm():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -287,7 +287,7 @@ def test_scan_puts_filters_high_cost():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -310,7 +310,7 @@ def test_scan_puts_uses_lastprice_when_ask_zero():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -331,7 +331,7 @@ def test_scan_puts_caps_short_at_10():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -355,7 +355,7 @@ def test_scan_puts_option_chain_error_continues():
 
     mock_ticker.option_chain.side_effect = chain_side_effect
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner._scan_puts("AAPL", 600.0, 200.0)
 
@@ -371,7 +371,7 @@ def test_check_no_gainers_returns_empty():
     mock_ticker = MagicMock()
     mock_ticker.fast_info.last_price = 11.0
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner.check()
 
@@ -387,7 +387,7 @@ def test_check_below_report_threshold_not_in_signals(monkeypatch):
     mock_ticker.fast_info.last_price = 20.0
     mock_ticker.options = []
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner.check()
 
@@ -414,7 +414,7 @@ def test_check_error_on_one_ticker_does_not_stop_others():
             t.option_chain.return_value = MagicMock(puts=puts)
         return t
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", side_effect=ticker_side_effect):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", side_effect=ticker_side_effect):
         scanner = GainerPutScanner(universe=["AAPL", "TSLA"])
         signals = scanner.check()
 
@@ -434,10 +434,10 @@ def test_check_returns_signal_objects():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(puts=puts)
 
-    with patch("indicators.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.gainer_puts.yf.Ticker", return_value=mock_ticker):
         scanner = GainerPutScanner(universe=["AAPL"])
         signals = scanner.check()
 
-    from indicators.sources.base import Signal
+    from tailwind_options.sources.base import Signal
     assert all(isinstance(s, Signal) for s in signals)
     assert all(s.triggered for s in signals)

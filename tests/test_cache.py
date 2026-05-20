@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import indicators.cache as cache_mod
-from indicators import cache
+import tailwind_options.cache as cache_mod
+from tailwind_options import cache
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 

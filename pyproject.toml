@@ -1,5 +1,5 @@
 [project]
-name = "indicators"
+name = "tailwind-options"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["indicators*"]
+include = ["tailwind_options*"]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=indicators --cov=lambda_handler --cov-report=term-missing --cov-fail-under=90 -m 'not integration'"
+addopts = "--cov=tailwind_options --cov=lambda_handler --cov-report=term-missing --cov-fail-under=90 -m 'not integration'"
 markers = ["integration: requires a deployed AWS environment (run via pytest tests/integration/ --override-ini='addopts=')"]
 
 [tool.coverage.report]

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from indicators.sources.base import Signal
+from tailwind_options.sources.base import Signal
 
 
 def make_call_signal(ticker="AAPL", term="short", **overrides) -> Signal:

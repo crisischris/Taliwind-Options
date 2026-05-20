@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import indicators.cache as cache_mod
-from indicators import cache
-from indicators.sources.trend_calls import (
+import tailwind_options.cache as cache_mod
+from tailwind_options import cache
+from tailwind_options.sources.trend_calls import (
     TrendCallScanner,
     _norm_cdf,
     _prob_itm_call,
@@ -95,7 +95,7 @@ def test_check_empty_universe_returns_empty():
 
 def test_check_no_momentum_tickers_returns_empty():
     download_result = _make_yf_download(["TSLA"], [(100.0, 100.0)])  # 0% gain
-    with patch("indicators.sources.trend_calls.yf.download", return_value=download_result):
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=download_result):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner.check()
     assert signals == []
@@ -117,8 +117,8 @@ def test_check_error_on_ticker_continues():
         t.option_chain.return_value = MagicMock(calls=calls)
         return t
 
-    with patch("indicators.sources.trend_calls.yf.download", return_value=download_result):
-        with patch("indicators.sources.trend_calls.yf.Ticker", side_effect=ticker_side_effect):
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=download_result):
+        with patch("tailwind_options.sources.trend_calls.yf.Ticker", side_effect=ticker_side_effect):
             scanner = TrendCallScanner(universe=["TSLA", "NVDA"])
             signals = scanner.check()
 
@@ -130,7 +130,7 @@ def test_check_error_on_ticker_continues():
 def test_filter_by_momentum_returns_passing_tickers():
     # TSLA: +800% (passes), NVDA: +5% (below 15% threshold)
     download_result = _make_yf_download(["TSLA", "NVDA"], [(10.0, 90.0), (10.0, 10.5)])
-    with patch("indicators.sources.trend_calls.yf.download", return_value=download_result):
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=download_result):
         scanner = TrendCallScanner(universe=["TSLA", "NVDA"])
         result = scanner._filter_by_momentum()
     tickers = [r[0] for r in result]
@@ -143,7 +143,7 @@ def test_filter_by_momentum_sorted_descending():
         ["TSLA", "NVDA", "PLTR"],
         [(10.0, 90.0), (10.0, 50.0), (10.0, 200.0)],
     )
-    with patch("indicators.sources.trend_calls.yf.download", return_value=download_result):
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=download_result):
         scanner = TrendCallScanner(universe=["TSLA", "NVDA", "PLTR"])
         result = scanner._filter_by_momentum()
     gains = [r[1] for r in result]
@@ -152,17 +152,17 @@ def test_filter_by_momentum_sorted_descending():
 
 def test_filter_by_momentum_uses_cache():
     download_result = _make_yf_download(["TSLA"], [(10.0, 90.0)])
-    with patch("indicators.sources.trend_calls.yf.download", return_value=download_result) as mock_dl:
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=download_result) as mock_dl:
         scanner = TrendCallScanner(universe=["TSLA"])
         scanner._filter_by_momentum()
         mock_dl.assert_called_once()
-    with patch("indicators.sources.trend_calls.yf.download") as mock_dl2:
+    with patch("tailwind_options.sources.trend_calls.yf.download") as mock_dl2:
         scanner._filter_by_momentum()
         mock_dl2.assert_not_called()
 
 
 def test_filter_by_momentum_download_failure_returns_empty():
-    with patch("indicators.sources.trend_calls.yf.download", side_effect=Exception("network")):
+    with patch("tailwind_options.sources.trend_calls.yf.download", side_effect=Exception("network")):
         scanner = TrendCallScanner(universe=["TSLA"])
         result = scanner._filter_by_momentum()
     assert result == []
@@ -172,7 +172,7 @@ def test_filter_by_momentum_skips_insufficient_data():
     dates = pd.date_range("2025-01-01", periods=1, freq="D")
     cols = pd.MultiIndex.from_tuples([("Close", "TSLA")])
     df = pd.DataFrame([[100.0]], columns=cols, index=dates)
-    with patch("indicators.sources.trend_calls.yf.download", return_value=df):
+    with patch("tailwind_options.sources.trend_calls.yf.download", return_value=df):
         scanner = TrendCallScanner(universe=["TSLA"])
         result = scanner._filter_by_momentum()
     assert result == []
@@ -183,7 +183,7 @@ def test_filter_by_momentum_skips_insufficient_data():
 def test_fetch_price_returns_price():
     mock_ticker = MagicMock()
     mock_ticker.fast_info.last_price = 150.0
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         price = scanner._fetch_price("TSLA")
     assert price == 150.0
@@ -192,7 +192,7 @@ def test_fetch_price_returns_price():
 def test_fetch_price_none_when_no_price():
     mock_ticker = MagicMock()
     mock_ticker.fast_info.last_price = None
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         price = scanner._fetch_price("TSLA")
     assert price is None
@@ -201,7 +201,7 @@ def test_fetch_price_none_when_no_price():
 def test_fetch_price_uses_cache():
     mock_ticker = MagicMock()
     mock_ticker.fast_info.last_price = 150.0
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker) as mock_yf:
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker) as mock_yf:
         scanner = TrendCallScanner(universe=["TSLA"])
         scanner._fetch_price("TSLA")
         scanner._fetch_price("TSLA")
@@ -213,7 +213,7 @@ def test_fetch_price_uses_cache():
 def test_scan_calls_no_expirations_returns_empty():
     mock_ticker = MagicMock()
     mock_ticker.options = []
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
     assert signals == []
@@ -228,7 +228,7 @@ def test_scan_calls_produces_signals():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -246,7 +246,7 @@ def test_scan_calls_filters_itm():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -263,7 +263,7 @@ def test_scan_calls_filters_high_cost():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -286,7 +286,7 @@ def test_scan_calls_uses_lastprice_when_ask_zero():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -304,7 +304,7 @@ def test_scan_calls_short_and_long_term_assignment():
     mock_ticker.options = [short_exp, long_exp]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -326,7 +326,7 @@ def test_scan_calls_caps_short_at_10():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -350,7 +350,7 @@ def test_scan_calls_option_chain_error_continues():
 
     mock_ticker.option_chain.side_effect = chain_side_effect
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 
@@ -366,7 +366,7 @@ def test_scan_calls_includes_breakeven_rise_pct():
     mock_ticker.options = [expiry]
     mock_ticker.option_chain.return_value = MagicMock(calls=calls)
 
-    with patch("indicators.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
+    with patch("tailwind_options.sources.trend_calls.yf.Ticker", return_value=mock_ticker):
         scanner = TrendCallScanner(universe=["TSLA"])
         signals = scanner._scan_calls("TSLA", 90.0, 150.0)
 

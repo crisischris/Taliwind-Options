@@ -30,9 +30,9 @@ def handler(event: dict, context: Any) -> dict:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
 
     try:
-        from indicators.call_universe import get_tickers
-        from indicators.sources.gainer_puts import GainerPutScanner
-        from indicators.sources.trend_calls import TrendCallScanner
+        from tailwind_options.call_universe import get_tickers
+        from tailwind_options.sources.gainer_puts import GainerPutScanner
+        from tailwind_options.sources.trend_calls import TrendCallScanner
 
         log.info("Running daily gainer put scan")
         put_signals = [s for s in GainerPutScanner().check() if s.triggered]
@@ -63,7 +63,7 @@ def _write_report_to_s3(
     timestamp: str,
     log: logging.LoggerAdapter,
 ) -> None:
-    from indicators.report import _build_calls_report, _build_puts_report
+    from tailwind_options.report import _build_calls_report, _build_puts_report
 
     if put_signals:
         puts_id = f"put-scan-{timestamp}"
