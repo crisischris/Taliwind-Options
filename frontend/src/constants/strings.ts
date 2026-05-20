@@ -76,8 +76,8 @@ export const HERO_CARD = {
 export const FILTERS_SHEET = {
   triggerLabel: 'Filters',
   premiumLabel: 'Filters',
-  premiumBadge: 'PREMIUM',
-  getPremium:   'Get Premium',
+  premiumBadge: 'COMING SOON',
+  getPremium:   'Coming Soon',
   comingSoon:   'Premium coming soon',
 } as const
 

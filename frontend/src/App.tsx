@@ -14,7 +14,8 @@ import { FOOTER } from './constants/strings'
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme')
   if (stored === 'light') return 'light'
-  return 'dark'
+  if (stored === 'dark') return 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 // Hash format: "#page" or "#page;heroRowId" or "#put-scan-..." (report deep-link)
