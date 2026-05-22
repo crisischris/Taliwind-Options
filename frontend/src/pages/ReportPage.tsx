@@ -5,7 +5,8 @@ import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { HERO_CARD } from '@/constants/strings'
+import { HERO_CARD, PAGE_META } from '@/constants/strings'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import HeroCardDeck from '@/components/HeroCardDeck'
 import ScanBadge from '@/components/ScanBadge'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
@@ -54,6 +55,8 @@ function flashRow(rowId: string) {
 
 export default function ReportPage({ config }: { config: ScanConfig }) {
   const { base, heroIdPrefix, moveLabel, strings } = config
+
+  usePageMeta(PAGE_META[base].title, PAGE_META[base].description)
 
   const pendingHeroRef = useRef<string | null>(location.hash.slice(1).split(';')[1] ?? null)
   const { manifest, error } = useManifest(base)

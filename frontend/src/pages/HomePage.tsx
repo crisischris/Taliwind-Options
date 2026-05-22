@@ -1,7 +1,8 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { useManifest, useReport } from '@/hooks/useReport'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { Button } from '@/components/ui/button'
-import { HERO_CARD, HOME_PAGE } from '@/constants/strings'
+import { HERO_CARD, HOME_PAGE, PAGE_META } from '@/constants/strings'
 import { track } from '@/lib/analytics'
 import HeroCardDeck from '@/components/HeroCardDeck'
 import type { Page } from '@/components/Navbar'
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function HomePage({ onNavigate }: Props) {
+  usePageMeta(PAGE_META.home.title, PAGE_META.home.description)
+
   const { manifest: putsManifest, error: putsError } = useManifest('puts')
   const { manifest: callsManifest, error: callsError } = useManifest('calls')
 

@@ -155,6 +155,28 @@ export const FOOTER = {
   mobileDisclaimer:   'Options trading involves significant risk and is not suitable for all investors.',
 } as const
 
+// SEO: per-page title and meta description. Title is set via usePageMeta on each page transition
+// so Googlebot (which executes JS) sees distinct titles; social crawlers use the static
+// fallbacks in index.html. Descriptions should be 140-160 characters for full snippet display.
+export const PAGE_META = {
+  home: {
+    title:       'Tailwind Options',
+    description: 'Twice-daily scans for asymmetric options plays — cheap OTM puts on extreme gainers and cheap calls on momentum names from S&P 500, NASDAQ 100, and leading thematic ETFs.',
+  },
+  puts: {
+    title:       'Put Report | Tailwind Options',
+    description: 'Cheap out-of-the-money puts on S&P 500 and NASDAQ 100 stocks up 500%+ over the past year. Scored by return multiple × probability ITM.',
+  },
+  calls: {
+    title:       'Call Report | Tailwind Options',
+    description: 'Cheap out-of-the-money calls on momentum names held across ARKK, SMH, AIQ, BOTZ, and other thematic ETFs. Scored by return multiple × probability ITM.',
+  },
+  about: {
+    title:       'About | Tailwind Options',
+    description: 'How Tailwind Options works — scanner methodology, judgement calls, and the thesis behind cheap asymmetric options plays on extreme gainers and momentum names.',
+  },
+} as const
+
 export const ABOUT_PAGE = {
   title: 'About',
   intro: `${APP_NAME} runs twice-daily scans to surface asymmetric options plays — cheap out-of-the-money puts on extreme gainers, and cheap calls on momentum names. Scans run at market open and midday ET. Reports are compared across runs to highlight what's new.`,

@@ -1,4 +1,5 @@
-import { ABOUT_PAGE, METHODOLOGY, CALLS_METHODOLOGY } from '@/constants/strings'
+import { ABOUT_PAGE, METHODOLOGY, CALLS_METHODOLOGY, PAGE_META } from '@/constants/strings'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 function MethodologySection({ m }: { m: typeof METHODOLOGY | typeof CALLS_METHODOLOGY }) {
   return (
@@ -21,6 +22,8 @@ function MethodologySection({ m }: { m: typeof METHODOLOGY | typeof CALLS_METHOD
 }
 
 export default function AboutPage() {
+  usePageMeta(PAGE_META.about.title, PAGE_META.about.description)
+
   return (
     <div className="p-4 sm:p-8">
       <div className="max-w-7xl mx-auto py-16">

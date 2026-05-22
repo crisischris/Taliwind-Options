@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 
+# SEO: points crawlers to the sitemap for faster discovery
+Sitemap: https://tailwindoptions.com/sitemap.xml
+
 # Block AI training scrapers
 User-agent: GPTBot
 Disallow: /
