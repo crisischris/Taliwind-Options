@@ -222,6 +222,13 @@ class TailwindOptionsStack(cdk.Stack):
                 target=route53.RecordTarget.from_alias(targets.CloudFrontTarget(distribution)),
             )
 
+            # SEO: Google Search Console ownership verification via DNS TXT record
+            route53.TxtRecord(
+                self, "GoogleSiteVerification",
+                zone=hosted_zone,
+                values=["google-site-verification=40tur-6HWvDDSp3KIOoKtP6UCbxXQWw2yEgex1KA98c"],
+            )
+
             site_url = f"https://{config.domain_name}"
 
         # ── Monitoring: prod only ─────────────────────────────────────────────
