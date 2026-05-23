@@ -78,7 +78,7 @@ export const FILTERS_SHEET = {
   premiumLabel: 'Filters',
   premiumBadge: 'COMING SOON',
   getPremium:   'Coming Soon',
-  comingSoon:   'Premium coming soon',
+  comingSoon:   'Coming soon',
 } as const
 
 // Shared page strings — only titles differ between puts and calls

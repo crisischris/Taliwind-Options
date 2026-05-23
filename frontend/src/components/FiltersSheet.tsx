@@ -60,7 +60,7 @@ export default function FiltersSheet<T extends Record<string, number>>({
             <span className="text-sm font-medium">{FILTERS_SHEET.premiumLabel}</span>
             <Badge variant="gold" className="text-[10px] px-1.5 py-0">{FILTERS_SHEET.premiumBadge}</Badge>
           </div>
-          <Switch checked={premium} onCheckedChange={setPremium} aria-label="Enable premium filters" />
+          <Switch checked={premium} onCheckedChange={setPremium} aria-label="Enable filters" />
         </div>
 
         <div className="space-y-8 flex-1">
