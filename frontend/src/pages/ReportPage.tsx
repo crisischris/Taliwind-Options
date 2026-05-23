@@ -135,7 +135,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
   const moonshotHero = heroes?.moonshot?.contract ?? ''
 
   const allTickers    = report ? (report.tickers as AnyTicker[]) : []
-  const scanLabel     = getScanLabel()
+  // scanLabel is derived per-report from generated_at so morning/midday is accurate regardless of when the page is viewed
 
   function tickerHasNewContent(t: AnyTicker) {
     const isNew       = diff.prevTickers.size > 0 && !diff.prevTickers.has(t.ticker)
@@ -197,7 +197,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{strings.title}</h1>
             <div className="flex items-center gap-2 text-muted-foreground text-sm mt-1">
-              {report && <ScanBadge />}
+              {report && <ScanBadge generatedAt={report.generated_at} />}
               {report ? `Generated ${formatTimestamp(report.generated_at)}` : strings.loading}
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
             >
               {manifest.map(r => (
                 <option key={r.id} value={r.id}>
-                  {scanLabel} — {formatTimestamp(r.generated_at)} — {r.tickers_flagged} tickers
+                  {getScanLabel(r.generated_at)} — {formatTimestamp(r.generated_at)} — {r.tickers_flagged} tickers
                 </option>
               ))}
             </select>

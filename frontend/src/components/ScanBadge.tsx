@@ -34,8 +34,8 @@ function MiddayIcon({ className, 'aria-hidden': ariaHidden }: { className?: stri
   )
 }
 
-export default function ScanBadge() {
-  const label = getScanLabel()
+export default function ScanBadge({ generatedAt }: { generatedAt: string }) {
+  const label = getScanLabel(generatedAt)
   const isMorning = label === 'Morning Data'
   return (
     <Badge variant={isMorning ? 'gold' : 'secondary'} className="gap-1.5">

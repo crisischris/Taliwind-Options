@@ -1,5 +1,28 @@
 import { describe, it, expect } from 'vitest'
-import { formatTimestamp } from './timestamp'
+import { formatTimestamp, getScanLabel } from './timestamp'
+
+describe('getScanLabel', () => {
+  it('returns Morning Data for the 9:35 AM ET open scan (UTC 13:35 in summer)', () => {
+    // Regression: label must reflect the report timestamp, not the current time of day
+    expect(getScanLabel('2026-05-09_13-35')).toBe('Morning Data')
+  })
+
+  it('returns Midday Data for the 12:00 PM ET midday scan (UTC 16:00 in summer)', () => {
+    expect(getScanLabel('2026-05-09_16-00')).toBe('Midday Data')
+  })
+
+  it('returns Morning Data for the 9:35 AM ET open scan in winter (EST, UTC 14:35)', () => {
+    expect(getScanLabel('2026-01-09_14-35')).toBe('Morning Data')
+  })
+
+  it('returns Midday Data for the 12:00 PM ET midday scan in winter (EST, UTC 17:00)', () => {
+    expect(getScanLabel('2026-01-09_17-00')).toBe('Midday Data')
+  })
+
+  it('returns Midday Data for a malformed timestamp', () => {
+    expect(getScanLabel('bad')).toBe('Midday Data')
+  })
+})
 
 describe('formatTimestamp', () => {
   it('returns raw string when missing underscore separator', () => {

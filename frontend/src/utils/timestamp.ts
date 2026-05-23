@@ -5,12 +5,15 @@
 
 import scanSchedule from '@/config/scanSchedule.json'
 
-export function getScanLabel(): 'Morning Data' | 'Midday Data' {
+export function getScanLabel(generatedAt: string): 'Morning Data' | 'Midday Data' {
+  const [datePart, timePart] = generatedAt.split('_')
+  if (!datePart || !timePart) return 'Midday Data'
+  const [h, m] = timePart.split('-').map(Number)
+  const date = new Date(`${datePart}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00Z`)
   const etHour = Number(new Intl.DateTimeFormat('en-US', {
     hour: 'numeric', hour12: false, timeZone: 'America/New_York',
-  }).format(new Date())) % 24
-  const { openScanEt, middayScanEt } = scanSchedule
-  return etHour >= openScanEt.hour && etHour < middayScanEt.hour ? 'Morning Data' : 'Midday Data'
+  }).format(date)) % 24
+  return etHour < scanSchedule.middayScanEt.hour ? 'Morning Data' : 'Midday Data'
 }
 
 export function formatTimestamp(raw: string): string {
