@@ -10,10 +10,10 @@ interface Props {
 }
 
 const ITEMS: { id: Page; label: string; icon: React.ReactNode }[] = [
-  { id: 'home',  label: NAVBAR.home,  icon: <Home      className="h-5 w-5" /> },
-  { id: 'calls', label: NAVBAR.calls, icon: <TrendingUp  className="h-5 w-5" /> },
+  { id: 'home',  label: NAVBAR.home,  icon: <Home        className="h-5 w-5" /> },
+  { id: 'calls', label: NAVBAR.calls, icon: <TrendingUp   className="h-5 w-5" /> },
   { id: 'puts',  label: NAVBAR.puts,  icon: <TrendingDown className="h-5 w-5" /> },
-  { id: 'about', label: NAVBAR.about, icon: <Info      className="h-5 w-5" /> },
+  { id: 'about', label: NAVBAR.about, icon: <Info         className="h-5 w-5" /> },
 ]
 
 export default function BottomNav({ current, onChange }: Props) {

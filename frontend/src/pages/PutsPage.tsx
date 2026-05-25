@@ -1,6 +1,7 @@
 import { OPTIONS_TABLE, PUTS_PAGE } from '@/constants/strings'
 import PutsFiltersSheet from '@/components/PutsFiltersSheet'
 import ReportPage, { type ScanConfig } from '@/pages/ReportPage'
+import ThemePanel from '@/components/ThemePanel'
 import type { Put, PutTicker } from '@/types/report'
 
 const CONFIG: ScanConfig = {
@@ -17,5 +18,10 @@ const CONFIG: ScanConfig = {
 }
 
 export default function PutsPage() {
-  return <ReportPage config={CONFIG} />
+  return (
+    <>
+      <ThemePanel page="puts" />
+      <ReportPage config={CONFIG} />
+    </>
+  )
 }

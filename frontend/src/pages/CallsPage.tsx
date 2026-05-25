@@ -1,6 +1,7 @@
 import { CALLS_OPTIONS_TABLE, CALLS_PAGE } from '@/constants/strings'
 import CallsFiltersSheet from '@/components/CallsFiltersSheet'
 import ReportPage, { type ScanConfig } from '@/pages/ReportPage'
+import ThemePanel from '@/components/ThemePanel'
 import type { Call, CallTicker } from '@/types/report'
 
 const CONFIG: ScanConfig = {
@@ -17,5 +18,10 @@ const CONFIG: ScanConfig = {
 }
 
 export default function CallsPage() {
-  return <ReportPage config={CONFIG} />
+  return (
+    <>
+      <ThemePanel page="calls" />
+      <ReportPage config={CONFIG} />
+    </>
+  )
 }
