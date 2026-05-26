@@ -1,13 +1,14 @@
 import { OPTIONS_TABLE, PUTS_PAGE } from '@/constants/strings'
 import PutsFiltersSheet from '@/components/PutsFiltersSheet'
 import ReportPage, { type ScanConfig } from '@/pages/ReportPage'
-import ThemePanel from '@/components/ThemePanel'
+import ThemeSelect from '@/components/ThemeSelect'
 import type { Put, PutTicker } from '@/types/report'
 
 const CONFIG: ScanConfig = {
   base:          'puts',
   heroIdPrefix:  '',
   moveLabel:     '(1Y)',
+  themeSelector: <ThemeSelect page="puts" />,
   strings:       PUTS_PAGE,
   columns:       OPTIONS_TABLE.columns,
   FiltersSheet:  PutsFiltersSheet,
@@ -18,10 +19,5 @@ const CONFIG: ScanConfig = {
 }
 
 export default function PutsPage() {
-  return (
-    <>
-      <ThemePanel page="puts" />
-      <ReportPage config={CONFIG} />
-    </>
-  )
+  return <ReportPage config={CONFIG} />
 }

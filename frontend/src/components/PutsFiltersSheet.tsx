@@ -1,7 +1,15 @@
-import { METHODOLOGY } from '@/constants/strings'
+import { themeById } from '@/constants/themes'
+import { FILTERS_SHEET } from '@/constants/strings'
 import FiltersSheet from '@/components/FiltersSheet'
 import { FixedRule, EditableRule, NumberInput } from '@/components/FiltersSheetPrimitives'
 import { track } from '@/lib/analytics'
+
+const _theme = themeById('mean-reversion')!
+const METHODOLOGY = {
+  trigger:         FILTERS_SHEET.putsMethodologyTrigger,
+  thesis:          { heading: FILTERS_SHEET.thesisHeading,         body: _theme.thesis },
+  judgementCalls:  { heading: FILTERS_SHEET.judgementCallsHeading,  intro: _theme.judgementCalls!.intro },
+}
 
 const DEFAULTS = {
   minGainPct:  500,

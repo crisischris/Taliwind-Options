@@ -1,7 +1,15 @@
-import { CALLS_METHODOLOGY } from '@/constants/strings'
+import { themeById } from '@/constants/themes'
+import { FILTERS_SHEET } from '@/constants/strings'
 import FiltersSheet from '@/components/FiltersSheet'
 import { FixedRule, EditableRule, NumberInput } from '@/components/FiltersSheetPrimitives'
 import { track } from '@/lib/analytics'
+
+const _theme = themeById('ai-momentum')!
+const METHODOLOGY = {
+  trigger:         FILTERS_SHEET.callsMethodologyTrigger,
+  thesis:          { heading: FILTERS_SHEET.thesisHeading,         body: _theme.thesis },
+  judgementCalls:  { heading: FILTERS_SHEET.judgementCallsHeading,  intro: _theme.judgementCalls!.intro },
+}
 
 const DEFAULTS = {
   minMomentumPct:  15,
@@ -17,7 +25,7 @@ export default function CallsFiltersSheet() {
   return (
     <FiltersSheet
       defaults={DEFAULTS}
-      methodology={CALLS_METHODOLOGY}
+      methodology={METHODOLOGY}
       onOpen={() => track('filters_opened', { base: 'calls' })}
       renderRules={(filters, set, premium) => (
         <>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Info } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,58 @@ import { beCls, ivCls, probCls } from '@/utils/colors'
 import type { BaseOption } from '@/types/report'
 
 export type { BaseOption }
+
+// Hover on desktop, tap-to-pin on mobile. Uses a short delay before closing so
+// the `click` event (which fires after pointer-leave on mobile) can cancel it.
+function ColumnTip({ tip }: { tip: string }) {
+  const [open, setOpen] = useState(false)
+  const pinned = useRef(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDocPointerDown(e: PointerEvent) {
+      if (!triggerRef.current?.contains(e.target as Node)) {
+        pinned.current = false
+        setOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', onDocPointerDown)
+    return () => document.removeEventListener('pointerdown', onDocPointerDown)
+  }, [open])
+
+  function onOpenChange(val: boolean) {
+    if (pinned.current) return
+    if (!val) {
+      closeTimer.current = setTimeout(() => setOpen(false), 100)
+    } else {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+      setOpen(true)
+    }
+  }
+
+  function onClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    if (pinned.current) {
+      pinned.current = false
+      setOpen(false)
+    } else {
+      pinned.current = true
+      setOpen(true)
+    }
+  }
+
+  return (
+    <Tooltip open={open} onOpenChange={onOpenChange}>
+      <TooltipTrigger ref={triggerRef} type="button" className="inline-flex cursor-help focus:outline-none" onClick={onClick}>
+        <Info aria-hidden="true" className="h-3.5 w-3.5 opacity-30 hover:opacity-70 transition-opacity" />
+      </TooltipTrigger>
+      <TooltipContent>{tip}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 type SortDir = 'asc' | 'desc'
 
@@ -77,16 +129,7 @@ export default function OptionsTable<T extends BaseOption>({
                   {sortKey === col.key && (
                     <span aria-hidden="true" className="text-xs">{sortDir === 'desc' ? '↓' : '↑'}</span>
                   )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info
-                        aria-hidden="true"
-                        className="h-3.5 w-3.5 opacity-30 hover:opacity-70 cursor-help transition-opacity"
-                        onClick={e => e.stopPropagation()}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>{col.tip}</TooltipContent>
-                  </Tooltip>
+                  <ColumnTip tip={col.tip} />
                 </span>
               </TableHead>
             ))}

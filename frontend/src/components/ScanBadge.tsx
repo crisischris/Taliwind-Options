@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { getScanLabel } from '@/utils/timestamp'
 
-function SunriseIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
+export function SunriseIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" className={className} aria-hidden={ariaHidden}
       fill="none" stroke="currentColor" strokeLinecap="round">
@@ -16,7 +16,7 @@ function SunriseIcon({ className, 'aria-hidden': ariaHidden }: { className?: str
   )
 }
 
-function MiddayIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
+export function MiddayIcon({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" className={className} aria-hidden={ariaHidden}
       fill="none" stroke="currentColor" strokeLinecap="round">

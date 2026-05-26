@@ -7,12 +7,6 @@ export const NAVBAR = {
   about: 'About',
 } as const
 
-export const SETTINGS = {
-  title:      'Settings',
-  appearance: 'Appearance',
-  dark:       'Dark mode',
-  light:      'Light mode',
-} as const
 
 // Shared between puts and calls ticker cards — labels and icons are identical
 export const TICKER_CARD = {
@@ -74,11 +68,15 @@ export const HERO_CARD = {
 
 // Shared between puts and calls filters sheets
 export const FILTERS_SHEET = {
-  triggerLabel: 'Filters',
-  premiumLabel: 'Filters',
-  premiumBadge: 'COMING SOON',
-  getPremium:   'Coming Soon',
-  comingSoon:   'Coming soon',
+  triggerLabel:            'Filters',
+  premiumLabel:            'Filters',
+  premiumBadge:            'COMING SOON',
+  getPremium:              'Coming Soon',
+  comingSoon:              'Coming soon',
+  thesisHeading:           'The Thesis',
+  judgementCallsHeading:   'Judgement Calls',
+  putsMethodologyTrigger:  'How are these puts selected?',
+  callsMethodologyTrigger: 'How are these calls selected?',
 } as const
 
 // Shared page strings — only titles differ between puts and calls
@@ -94,51 +92,6 @@ const REPORT_PAGE_BASE = {
 export const PUTS_PAGE  = { title: 'Put Report',  ...REPORT_PAGE_BASE } as const
 export const CALLS_PAGE = { title: 'Call Report', ...REPORT_PAGE_BASE } as const
 
-export const METHODOLOGY = {
-  trigger: 'How are these puts selected?',
-  thesis: {
-    heading: 'The Thesis',
-    body: 'Stocks with 500%+ trailing 12-month gains tend to mean-revert. The move may be fundamental, but the options market regularly underprices downside risk on extreme gainers. This scanner finds those names and surfaces cheap out-of-the-money puts on them. The setup is asymmetric. Small premium at risk, large payoff if the correction plays out.',
-  },
-  judgementCalls: {
-    heading: 'Judgement Calls',
-    intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
-    rules: [
-      { rule: 'Universe', detail: 'S&P 500 and NASDAQ 100 constituents only — liquid, well-known names where options markets are active.' },
-      { rule: '500%+ over 1 year', detail: 'The stock must have appreciated at least 500% over the trailing 12 months. Below that threshold the mean-reversion thesis is weaker.' },
-      { rule: 'Out-of-the-money puts only', detail: 'We want cheap optionality on a correction, not intrinsic value. ITM puts are excluded.' },
-      { rule: 'Expiry between 60 and 1,000 DTE', detail: 'Too short and there is no time for the thesis to play out. Too long and pricing becomes speculative. The sweet spot is roughly 2 months to 3 years out.' },
-      { rule: 'Ask ≤ 5% of stock price', detail: 'Keeps the cost-of-insurance sensible. A put that costs more than 5% of the underlying is already pricing in meaningful downside.' },
-      { rule: 'Implied volatility ≤ 200%', detail: 'Extremely high IV means the market is already pricing in a crash. We want names where the put is still relatively cheap.' },
-      { rule: 'Minimum liquidity', detail: 'Open interest ≥ 10, or any volume traded today, or a recorded last price. Catches thinly-traded LEAPs that are still quote-able.' },
-      { rule: 'Scored by return × prob ITM', detail: 'Puts are ranked by return multiple (strike ÷ ask) multiplied by Black-Scholes probability of expiring in-the-money. This balances raw upside against realistic odds.' },
-      { rule: 'Top 10 per bucket', detail: 'Short-dated (< 6 months) and long-dated / LEAPs (6+ months) are capped at 10 each, sorted by score. Moonshots — the top 5 by raw return multiple — are surfaced separately.' },
-    ],
-  },
-} as const
-
-export const CALLS_METHODOLOGY = {
-  trigger: 'How are these calls selected?',
-  thesis: {
-    heading: 'The Thesis',
-    body: 'Macro tailwinds in AI, space, and disruptive tech create asymmetric upside in smaller, lesser-known names. This scanner finds tickers held across leading thematic ETFs — ARKK, ARKX, ARKQ, SMH, AIQ, BOTZ, and ROKT — that are showing strong 90-day momentum, and surfaces cheap out-of-the-money calls on them. The setup is a trend-continuation bet — small premium at risk, large payoff if the run extends.',
-  },
-  judgementCalls: {
-    heading: 'Judgement Calls',
-    intro: 'These are the rules baked into the scanner. Each one is a deliberate choice, not a given:',
-    rules: [
-      { rule: 'Universe', detail: 'Tickers held across ARKK, ARKX, ARKQ, SMH, AIQ, BOTZ, and ROKT ETFs — a cross-section of AI, semiconductors, robotics, and space plays. Holdings are fetched daily via Yahoo Finance and cached.' },
-      { rule: '15%+ momentum in 90 days', detail: 'The ticker must be up at least 15% over the trailing 90 days. This confirms the trend is live before we look for calls.' },
-      { rule: 'Out-of-the-money calls only', detail: 'We want cheap optionality on a continuation move, not intrinsic value. ITM calls are excluded.' },
-      { rule: 'Expiry between 60 and 365 DTE', detail: 'Long enough for the thesis to play out. LEAPs are included — macro trends take time.' },
-      { rule: 'Ask ≤ 4% of stock price', detail: 'Keeps premium cost manageable. These are momentum names with naturally higher volatility, so we allow slightly more than the put scanner.' },
-      { rule: 'Implied volatility ≤ 150%', detail: 'High-momentum stocks carry high IV. We accept up to 150% — above that the market is already pricing in a parabolic move.' },
-      { rule: 'Minimum liquidity', detail: 'Open interest ≥ 10, or any volume traded today, or a recorded last price.' },
-      { rule: 'Scored by return × prob ITM', detail: 'Calls are ranked by return multiple (strike ÷ ask) multiplied by Black-Scholes probability of expiring in-the-money. This balances raw upside against realistic odds.' },
-      { rule: 'Top 10 per bucket', detail: 'Short-dated (< 6 months) and long-dated / LEAPs (6+ months) are capped at 10 each, sorted by score. Moonshots — the top 5 by raw return multiple — are surfaced separately.' },
-    ],
-  },
-} as const
 
 export const HOME_PAGE = {
   subtitle:     'Twice-daily scans for asymmetric options plays — extreme gainers ripe for puts, momentum names primed for calls.',
@@ -179,5 +132,5 @@ export const PAGE_META = {
 
 export const ABOUT_PAGE = {
   title: 'About',
-  intro: `${APP_NAME} runs twice-daily scans to surface asymmetric options plays — cheap out-of-the-money puts on extreme gainers, and cheap calls on momentum names. Scans run at market open and midday ET. Reports are compared across runs to highlight what's new.`,
+  intro: `${APP_NAME} runs twice-daily scans to surface asymmetric options plays across many macro or micro themes. Scans run at market open and midday ET. Reports are compared across runs to highlight what's new.`,
 } as const

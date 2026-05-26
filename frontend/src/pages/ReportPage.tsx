@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react'
+import React, { useState, useEffect, useCallback, useRef, type ComponentType } from 'react'
 import { track } from '@/lib/analytics'
 import { formatTimestamp, getScanLabel } from '@/utils/timestamp'
 import { useManifest, useReport } from '@/hooks/useReport'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { SunriseIcon, MiddayIcon } from '@/components/ScanBadge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { HERO_CARD, PAGE_META } from '@/constants/strings'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import HeroCardDeck from '@/components/HeroCardDeck'
-import ScanBadge from '@/components/ScanBadge'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
 import type { BaseHeroOption } from '@/components/HeroCard'
 import type { PutTicker, CallTicker, BaseOption } from '@/types/report'
@@ -22,6 +23,7 @@ export interface ScanConfig {
   base:          'puts' | 'calls'
   heroIdPrefix:  string
   moveLabel:     string
+  themeSelector: React.ReactNode
   strings: {
     title:       string
     loading:     string
@@ -154,21 +156,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
     }
   }, [activeTicker, selectedTicker])
 
-  // Diff summary
-  const optLabel     = base === 'puts' ? 'put' : 'call'
-  const diffPrevLabel = diff.prevReportId
-    ? formatTimestamp(diff.prevReportId.slice(diff.prevReportId.indexOf('-scan-') + 6))
-    : ''
-  const diffNewTickers = diff.prevContracts.size > 0 && report
-    ? allTickers.filter(t => !diff.prevTickers.has(t.ticker)).length : 0
-  const diffNewOptions = diff.prevContracts.size > 0 && report
-    ? allTickers.flatMap(t => config.getOptions(t)).filter(o => !diff.prevContracts.has(o.contract)).length : 0
-  const diffParts = (diff.prevContracts.size > 0 && report)
-    ? ([
-        diffNewTickers > 0 && `${diffNewTickers} new ticker${diffNewTickers !== 1 ? 's' : ''}`,
-        diffNewOptions > 0 && `${diffNewOptions} new ${optLabel}${diffNewOptions !== 1 ? 's' : ''}`,
-      ] as (string | false)[]).filter((x): x is string => Boolean(x))
-    : []
+  const optLabel = base === 'puts' ? 'put' : 'call'
 
   const heroCards = report
     ? HERO_TERMS.map(term => ({
@@ -193,45 +181,47 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
     <div className="p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
 
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{strings.title}</h1>
-            <div className="flex items-center gap-2 text-muted-foreground text-sm mt-1">
-              {report && <ScanBadge generatedAt={report.generated_at} />}
-              {report ? `Generated ${formatTimestamp(report.generated_at)}` : strings.loading}
-            </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">{strings.title}</h1>
+          <div className="flex items-center gap-2 mt-2">
+            {config.themeSelector}
           </div>
-          <div className="flex flex-col gap-1 w-full sm:w-80 shrink-0">
-            <select
-              className={cn(
-                'rounded-md border border-input bg-card text-sm px-3 py-1.5',
-                'w-full focus:outline-none focus:ring-2 focus:ring-ring',
-              )}
-              aria-label="Select report"
-              value={selectedId ?? ''}
-              onChange={e => { track('report_selected', { base, report_id: e.target.value }); selectReport(e.target.value) }}
-            >
-              {manifest.map(r => (
-                <option key={r.id} value={r.id}>
-                  {getScanLabel(r.generated_at)} — {formatTimestamp(r.generated_at)} — {r.tickers_flagged} tickers
-                </option>
-              ))}
-            </select>
-            {diff.prevContracts.size > 0 && report && (
-              <p aria-live="polite" aria-atomic="true" className="text-xs text-muted-foreground px-0.5">
-                vs <span className="font-mono">{diffPrevLabel}</span>
-                {' — '}
-                {diffParts.length > 0
-                  ? diffParts.map((p, i) => (
-                      <span key={i}>
-                        {i > 0 && ', '}
-                        <span className="font-semibold text-gain">{p}</span>
-                      </span>
-                    ))
-                  : strings.noNewItems
-                }
-              </p>
-            )}
+          <div className="flex items-center gap-2 mt-1.5">
+            {selectedId === manifest[0]?.id && <Badge variant="outline" className="text-xs font-medium">Latest</Badge>}
+            {(() => {
+              const sel = manifest.find(r => r.id === selectedId)
+              const isMorning = sel ? getScanLabel(sel.generated_at) === 'Morning Data' : true
+              return (
+                <Select
+                  value={selectedId ?? ''}
+                  onValueChange={id => { track('report_selected', { base, report_id: id }); selectReport(id) }}
+                >
+                  <SelectTrigger className={cn(
+                    'h-7 w-auto gap-1.5 rounded-full border px-3 text-xs font-medium shadow-none focus:ring-0',
+                    isMorning
+                      ? 'border-gold/40 bg-gold/10 text-gold hover:bg-gold/20'
+                      : 'border-border bg-transparent hover:bg-muted',
+                  )}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {manifest.slice(0, 8).map(r => {
+                      const morning = getScanLabel(r.generated_at) === 'Morning Data'
+                      return (
+                        <SelectItem key={r.id} value={r.id}>
+                          <span className="flex items-center gap-1.5">
+                            {morning
+                              ? <SunriseIcon aria-hidden="true" className="h-3 w-auto text-gold" />
+                              : <MiddayIcon  aria-hidden="true" className="h-3 w-auto text-muted-foreground" />}
+                            {getScanLabel(r.generated_at).replace(' Data', '')} — {formatTimestamp(r.generated_at)}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              )
+            })()}
           </div>
         </div>
 

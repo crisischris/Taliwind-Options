@@ -1,13 +1,14 @@
 import { CALLS_OPTIONS_TABLE, CALLS_PAGE } from '@/constants/strings'
 import CallsFiltersSheet from '@/components/CallsFiltersSheet'
 import ReportPage, { type ScanConfig } from '@/pages/ReportPage'
-import ThemePanel from '@/components/ThemePanel'
+import ThemeSelect from '@/components/ThemeSelect'
 import type { Call, CallTicker } from '@/types/report'
 
 const CONFIG: ScanConfig = {
   base:          'calls',
   heroIdPrefix:  'call-',
   moveLabel:     '90d',
+  themeSelector: <ThemeSelect page="calls" />,
   strings:       CALLS_PAGE,
   columns:       CALLS_OPTIONS_TABLE.columns,
   FiltersSheet:  CallsFiltersSheet,
@@ -18,10 +19,5 @@ const CONFIG: ScanConfig = {
 }
 
 export default function CallsPage() {
-  return (
-    <>
-      <ThemePanel page="calls" />
-      <ReportPage config={CONFIG} />
-    </>
-  )
+  return <ReportPage config={CONFIG} />
 }

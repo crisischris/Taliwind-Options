@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import posthog from 'posthog-js'
-import { track } from './lib/analytics'
 import Navbar, { type Page } from './components/Navbar'
-import SettingsModal, { type Theme } from './components/SettingsModal'
+
+type Theme = 'dark' | 'light'
 import HomePage from './pages/HomePage'
 import PutsPage from './pages/PutsPage'
 import CallsPage from './pages/CallsPage'
@@ -34,8 +34,7 @@ function navigate(page: Page, heroRowId?: string) {
 
 export default function App() {
   const [page, setPage]             = useState<Page>(pageFromHash)
-  const [theme, setTheme]           = useState<Theme>(getInitialTheme)
-  const [showSettings, setSettings] = useState(false)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -54,18 +53,18 @@ export default function App() {
   function goTo(page: Page, heroRowId?: string) {
     navigate(page, heroRowId)
     setPage(page)
+    window.scrollTo(0, 0)
   }
 
   function toggleTheme() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    track('theme_toggled', { theme: next })
     setTheme(next)
     localStorage.setItem('theme', next)
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar current={page} onChange={goTo} onOpenSettings={() => { track('settings_opened'); setSettings(true) }} />
+      <Navbar current={page} onChange={goTo} theme={theme} onToggleTheme={toggleTheme} />
       <main className="flex-1 [overflow-x:clip]">
         {page === 'home'  && <HomePage onNavigate={goTo} />}
         {page === 'puts'  && <PutsPage />}
@@ -78,9 +77,6 @@ export default function App() {
       </main>
       <div className="hidden sm:block"><Footer /></div>
       <BottomNav current={page} onChange={goTo} />
-      {showSettings && (
-        <SettingsModal theme={theme} onToggle={toggleTheme} onClose={() => setSettings(false)} />
-      )}
     </div>
   )
 }

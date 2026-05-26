@@ -6,8 +6,6 @@ import {
   CALLS_PAGE,
   HOME_PAGE,
   FILTERS_SHEET,
-  METHODOLOGY,
-  CALLS_METHODOLOGY,
 } from '../src/constants/strings'
 
 // ── New Only + hero click bug fix ─────────────────────────────────────────────
@@ -22,14 +20,14 @@ test('hero card click clears new only filter and shows ticker', async ({ page })
   await newOnlyBtn.click()
 
   // MSFT is new; AAPL is not — only MSFT tab visible
-  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_MSFT.ticker) })).toBeVisible()
-  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).not.toBeVisible()
+  await expect(page.getByRole('tab', { name: new RegExp(PUT_TICKER_MSFT.ticker) })).toBeVisible()
+  await expect(page.getByRole('tab', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).not.toBeVisible()
 
   // Click the short hero (AAPL) — should clear newOnly
   await page.locator('.md\\:grid').getByText(HERO_CARD.short.label).click()
 
   // newOnly cleared: AAPL tab now visible
-  await expect(page.getByRole('button', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).toBeVisible()
+  await expect(page.getByRole('tab', { name: new RegExp(PUT_TICKER_AAPL.ticker) })).toBeVisible()
 })
 
 test.beforeEach(async ({ page }) => {
@@ -51,7 +49,8 @@ test('puts page renders ticker tabs', async ({ page }) => {
 
 test('puts page report selector shows scan entry', async ({ page }) => {
   await page.goto('/#puts')
-  await expect(page.locator('select option')).toHaveCount(1)
+  // fixture timestamp 09:31 UTC = 5:31 AM ET → Morning label shown in the select trigger
+  await expect(page.getByText(/Morning|Midday/).first()).toBeVisible()
 })
 
 test('puts ticker tab switches active ticker', async ({ page }) => {
@@ -62,17 +61,17 @@ test('puts ticker tab switches active ticker', async ({ page }) => {
 
 test('puts expand/collapse all buttons work', async ({ page }) => {
   await page.goto('/#puts')
-  await page.getByRole('button', { name: PUTS_PAGE.collapseAll }).click()
-  await expect(page.getByRole('button', { name: PUTS_PAGE.expandAll })).toBeVisible()
-  await page.getByRole('button', { name: PUTS_PAGE.expandAll }).click()
+  await page.getByRole('button', { name: PUTS_PAGE.collapseAll, exact: true }).click()
+  await expect(page.getByRole('button', { name: PUTS_PAGE.expandAll, exact: true })).toBeVisible()
+  await page.getByRole('button', { name: PUTS_PAGE.expandAll, exact: true }).click()
   await expect(page.getByRole('cell', { name: PUT_TICKER_AAPL.puts[0].expiry })).toBeVisible()
 })
 
 test('puts filters sheet opens with methodology', async ({ page }) => {
   await page.goto('/#puts')
   await page.getByRole('button', { name: FILTERS_SHEET.triggerLabel }).click()
-  await expect(page.getByText(METHODOLOGY.trigger)).toBeVisible()
-  await expect(page.getByRole('heading', { name: METHODOLOGY.thesis.heading })).toBeVisible()
+  await expect(page.getByText(FILTERS_SHEET.putsMethodologyTrigger)).toBeVisible()
+  await expect(page.getByRole('heading', { name: FILTERS_SHEET.thesisHeading })).toBeVisible()
 })
 
 // ── Calls page ────────────────────────────────────────────────────────────────
@@ -90,7 +89,7 @@ test('calls page renders ticker tab', async ({ page }) => {
 test('calls filters sheet opens with methodology', async ({ page }) => {
   await page.goto('/#calls')
   await page.getByRole('button', { name: FILTERS_SHEET.triggerLabel }).click()
-  await expect(page.getByText(CALLS_METHODOLOGY.trigger)).toBeVisible()
+  await expect(page.getByText(FILTERS_SHEET.callsMethodologyTrigger)).toBeVisible()
 })
 
 // ── Home page with data ───────────────────────────────────────────────────────
