@@ -13,11 +13,9 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 
 interface Props {
   page: 'puts' | 'calls'
-}
-
-function getInitialThemeId(page: 'puts' | 'calls', themes: ThemeDefinition[]): string {
-  const stored = localStorage.getItem(`selectedTheme_${page}`)
-  return themes.find(t => t.id === stored)?.id ?? themes[0].id
+  value: string
+  onValueChange: (id: string) => void
+  showInfo?: boolean
 }
 
 function ThemeInfoTip({ theme }: { theme: ThemeDefinition }) {
@@ -84,23 +82,17 @@ function ThemeInfoTip({ theme }: { theme: ThemeDefinition }) {
   )
 }
 
-export default function ThemeSelect({ page }: Props) {
+export default function ThemeSelect({ page, value, onValueChange, showInfo = true }: Props) {
   const themes = themesForPage(page)
-  const [selectedId, setSelectedId] = useState(() => getInitialThemeId(page, themes))
 
   const liveThemes = themes.filter(t => !t.stub)
   const stubThemes = themes.filter(t => t.stub)
-  const selectedTheme = themes.find(t => t.id === selectedId) ?? themes[0]
-
-  function select(id: string) {
-    setSelectedId(id)
-    localStorage.setItem(`selectedTheme_${page}`, id)
-  }
+  const selectedTheme = themes.find(t => t.id === value) ?? themes[0]
 
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1.5">
-        <Select value={selectedId} onValueChange={select}>
+        <Select value={value} onValueChange={onValueChange}>
           <SelectTrigger className="h-7 w-auto gap-1 rounded-full border-border bg-transparent px-3 text-xs font-medium shadow-none hover:bg-muted focus:ring-0">
             <span className="text-muted-foreground">Theme:</span>
             <SelectValue />
@@ -122,7 +114,7 @@ export default function ThemeSelect({ page }: Props) {
             )}
           </SelectContent>
         </Select>
-        <ThemeInfoTip theme={selectedTheme} />
+        {showInfo && <ThemeInfoTip theme={selectedTheme} />}
       </div>
     </TooltipProvider>
   )

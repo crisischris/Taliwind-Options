@@ -89,8 +89,8 @@ const REPORT_PAGE_BASE = {
   noNewItems:  'no new items',
 } as const
 
-export const PUTS_PAGE  = { title: 'Put Report',  ...REPORT_PAGE_BASE } as const
-export const CALLS_PAGE = { title: 'Call Report', ...REPORT_PAGE_BASE } as const
+export const PUTS_PAGE  = { title: 'Puts',  ...REPORT_PAGE_BASE } as const
+export const CALLS_PAGE = { title: 'Calls', ...REPORT_PAGE_BASE } as const
 
 
 export const HOME_PAGE = {

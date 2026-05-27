@@ -50,7 +50,7 @@ export default function HeroCard({ option, movePct, moveLabel, label, icon, hero
         <div className="flex flex-wrap items-baseline gap-4 mb-4">
           <span className="text-gold text-5xl font-black tracking-tight">{option.ticker}</span>
           <Badge variant="gold" className="text-sm font-semibold">
-            +{Math.round(movePct)}% {moveLabel}
+            {movePct >= 0 ? '+' : ''}{Math.round(movePct)}% {moveLabel}
           </Badge>
           <span className="text-muted-foreground text-sm">@ ${option.current_price.toFixed(2)}</span>
         </div>

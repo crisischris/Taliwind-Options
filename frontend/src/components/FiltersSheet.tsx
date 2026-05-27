@@ -1,8 +1,6 @@
-import { SlidersHorizontal, Crown, RotateCcw } from 'lucide-react'
+import { SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { FILTERS_SHEET } from '@/constants/strings'
 import type { ReactNode } from 'react'
@@ -30,15 +28,11 @@ export default function FiltersSheet<T extends Record<string, number>>({
   onOpen,
   renderRules,
 }: Props<T>) {
-  const [open, setOpen]       = useState(false)
-  const [premium, setPremium] = useState(false)
-  const [filters, setFilters] = useState<T>(defaults)
+  const [open, setOpen] = useState(false)
+  const [filters]       = useState<T>(defaults)
 
-  function set<K extends keyof T>(key: K, value: number) {
-    setFilters(f => ({ ...f, [key]: value }))
-  }
-
-  function reset() { setFilters(defaults) }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function set<K extends keyof T>(_k: K, _v: number) {}
 
   return (
     <Sheet open={open} onOpenChange={v => { if (v) onOpen?.(); setOpen(v) }}>
@@ -54,15 +48,6 @@ export default function FiltersSheet<T extends Record<string, number>>({
           <SheetTitle>{methodology.trigger}</SheetTitle>
         </SheetHeader>
 
-        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2 mb-6">
-          <div className="flex items-center gap-2">
-            <Crown className="h-4 w-4 text-gold" />
-            <span className="text-sm font-medium">{FILTERS_SHEET.premiumLabel}</span>
-            <Badge variant="gold" className="text-[10px] px-1.5 py-0">{FILTERS_SHEET.premiumBadge}</Badge>
-          </div>
-          <Switch checked={premium} onCheckedChange={setPremium} aria-label="Enable filters" />
-        </div>
-
         <div className="space-y-8 flex-1">
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
@@ -77,26 +62,10 @@ export default function FiltersSheet<T extends Record<string, number>>({
             </h3>
             <p className="text-xs text-muted-foreground mb-4">{methodology.judgementCalls.intro}</p>
             <ul className="space-y-5">
-              {renderRules(filters, set, premium)}
+              {renderRules(filters, set, false)}
             </ul>
           </section>
         </div>
-
-        {premium && (
-          <div className="border-t border-border pt-4 mt-6 flex items-center justify-between gap-3">
-            <button
-              onClick={reset}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Restore defaults
-            </button>
-            <div className="flex flex-col items-end gap-1">
-              <Button size="sm" disabled>{FILTERS_SHEET.getPremium}</Button>
-              <p className="text-[10px] text-muted-foreground">{FILTERS_SHEET.comingSoon}</p>
-            </div>
-          </div>
-        )}
       </SheetContent>
     </Sheet>
   )

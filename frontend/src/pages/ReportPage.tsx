@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, type ComponentType } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { track } from '@/lib/analytics'
 import { formatTimestamp, getScanLabel } from '@/utils/timestamp'
 import { useManifest, useReport } from '@/hooks/useReport'
@@ -9,21 +9,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { HERO_CARD, PAGE_META } from '@/constants/strings'
 import { usePageMeta } from '@/hooks/usePageMeta'
+import { themesForPage } from '@/constants/themes'
 import HeroCardDeck from '@/components/HeroCardDeck'
 import TickerCard, { type ExpansionOverride } from '@/components/TickerCard'
+import ThemeSelect from '@/components/ThemeSelect'
+import ThemeFiltersSheet from '@/components/ThemeFiltersSheet'
 import type { BaseHeroOption } from '@/components/HeroCard'
 import type { PutTicker, CallTicker, BaseOption } from '@/types/report'
 
 type AnyTicker = PutTicker | CallTicker
-type HeroMap   = Record<'short' | 'long' | 'moonshot', { ticker: string; contract: string } | null>
+type HeroMap   = Record<'short' | 'long' | 'moonshot', { ticker: string; contract: string; move_pct: number; move_label: string } | null>
 
 const HERO_TERMS = ['short', 'long', 'moonshot'] as const
 
 export interface ScanConfig {
-  base:          'puts' | 'calls'
-  heroIdPrefix:  string
-  moveLabel:     string
-  themeSelector: React.ReactNode
+  base:     'puts' | 'calls'
   strings: {
     title:       string
     loading:     string
@@ -33,12 +33,9 @@ export interface ScanConfig {
     collapseAll: string
     noNewItems:  string
   }
-  columns:       readonly { key: string; label: string; tip: string }[]
-  FiltersSheet:  ComponentType
-  getOptions:    (t: AnyTicker) => BaseOption[]
-  getMovePct:    (t: AnyTicker) => number
-  getHeroMovePct:(h: BaseHeroOption | null) => number
-  getBreakeven:  (o: BaseOption) => number
+  columns:      readonly { key: string; label: string; tip: string }[]
+  getOptions:   (t: AnyTicker) => BaseOption[]
+  getBreakeven: (o: BaseOption) => number
 }
 
 function scrollTickerTabIntoView(ticker: string) {
@@ -56,12 +53,25 @@ function flashRow(rowId: string) {
 }
 
 export default function ReportPage({ config }: { config: ScanConfig }) {
-  const { base, heroIdPrefix, moveLabel, strings } = config
+  const { base, strings } = config
+  const heroIdPrefix = base === 'calls' ? 'call-' : ''
 
   usePageMeta(PAGE_META[base].title, PAGE_META[base].description)
 
+  const themes = themesForPage(base)
+  const [selectedThemeId, setSelectedThemeId] = useState(() => {
+    const stored = localStorage.getItem(`selectedTheme_${base}`)
+    return themes.find(t => t.id === stored)?.id ?? themes[0].id
+  })
+
+  function handleThemeChange(id: string) {
+    localStorage.setItem(`selectedTheme_${base}`, id)
+    setSelectedThemeId(id)
+    setSelectedId(null)
+  }
+
   const pendingHeroRef = useRef<string | null>(location.hash.slice(1).split(';')[1] ?? null)
-  const { manifest, error } = useManifest(base)
+  const { manifest, error } = useManifest(base, selectedThemeId)
   const [selectedId, setSelectedId]         = useState<string | null>(null)
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
   const [newOnly, setNewOnly]               = useState(false)
@@ -71,7 +81,6 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
     if (!manifest.length) return
     const hashId = location.hash.slice(1).split(';')[0]
     const target = manifest.find(m => m.id === hashId)?.id ?? manifest[0]?.id ?? null
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedId(target)
   }, [manifest])
 
@@ -93,9 +102,9 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
     setNewOnly(false)
   }
 
-  const { report, diff } = useReport(base, selectedId, manifest)
+  const { report, diff } = useReport(base, selectedId, manifest, selectedThemeId)
 
-  const scrollToHero = useCallback((heroRowId: string) => {
+  function scrollToHero(heroRowId: string) {
     track('hero_card_clicked', { base, term: heroRowId.replace(`hero-${heroIdPrefix}`, '') })
     setNewOnly(false)
     if (report) {
@@ -108,7 +117,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
     }
     setExpansion(p => ({ open: true, v: (p?.v ?? 0) + 1 }))
     setTimeout(() => flashRow(heroRowId), 50)
-  }, [report, heroIdPrefix])
+  }
 
   // On first load from a deep-link hash (format: #puts;hero-short), scroll to the named hero row.
   // useRef so consuming the pending value doesn't trigger a re-render.
@@ -159,14 +168,17 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
   const optLabel = base === 'puts' ? 'put' : 'call'
 
   const heroCards = report
-    ? HERO_TERMS.map(term => ({
-        option:    (report.heroes as unknown as HeroMap)[term] as BaseHeroOption | null,
-        movePct:   config.getHeroMovePct((report.heroes as unknown as HeroMap)[term] as BaseHeroOption | null),
-        moveLabel,
-        label:     HERO_CARD[term].label,
-        icon:      HERO_CARD[term].icon,
-        heroRowId: `hero-${heroIdPrefix}${term}`,
-      }))
+    ? HERO_TERMS.map(term => {
+        const hero = (report.heroes as unknown as HeroMap)[term]
+        return {
+          option:    hero as BaseHeroOption | null,
+          movePct:   hero?.move_pct ?? 0,
+          moveLabel: hero?.move_label ?? '',
+          label:     HERO_CARD[term].label,
+          icon:      HERO_CARD[term].icon,
+          heroRowId: `hero-${heroIdPrefix}${term}`,
+        }
+      })
     : []
 
   if (error) {
@@ -184,7 +196,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">{strings.title}</h1>
           <div className="flex items-center gap-2 mt-2">
-            {config.themeSelector}
+            <ThemeSelect page={base} value={selectedThemeId} onValueChange={handleThemeChange} />
           </div>
           <div className="flex items-center gap-2 mt-1.5">
             {selectedId === manifest[0]?.id && <Badge variant="outline" className="text-xs font-medium">Latest</Badge>}
@@ -237,7 +249,7 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
             </div>
 
             <div className="flex justify-end gap-2 mb-0">
-              <config.FiltersSheet />
+              <ThemeFiltersSheet base={base} themeId={selectedThemeId} />
               {hasNewItems && diff.prevContracts.size > 0 && (
                 <Button variant={newOnly ? 'secondary' : 'outline'} size="sm"
                   aria-pressed={newOnly}
@@ -264,7 +276,6 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                     const newCount    = diff.prevContracts.size > 0
                       ? config.getOptions(t).filter(o => !diff.prevContracts.has(o.contract)).length
                       : 0
-                    const movePct = config.getMovePct(t)
                     return (
                       <button
                         key={t.ticker}
@@ -282,8 +293,8 @@ export default function ReportPage({ config }: { config: ScanConfig }) {
                         onClick={() => { track('ticker_tab_clicked', { base, ticker: t.ticker }); setSelectedTicker(t.ticker) }}
                       >
                         {t.ticker}
-                        <span className={cn('text-xs font-normal', movePct >= 0 ? 'text-gain' : 'text-loss')}>
-                          {movePct >= 0 ? '+' : ''}{Math.round(movePct)}% {moveLabel}
+                        <span className={cn('text-xs font-normal', (t.move_pct ?? 0) >= 0 ? 'text-gain' : 'text-loss')}>
+                          {(t.move_pct ?? 0) >= 0 ? '+' : ''}{Math.round(t.move_pct ?? 0)}% {t.move_label ?? ''}
                         </span>
                         {isNewTicker && (
                           <Badge variant="success" className="text-[9px] py-0 px-1 h-4 leading-none">NEW</Badge>
