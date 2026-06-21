@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+PYTHON=/Users/chrisnelson/miniconda3/envs/indicators/bin/python
+
+echo "==> Unit tests"
+$PYTHON -m pytest tests/ --tb=short -q
+
+if aws sts get-caller-identity > /dev/null 2>&1; then
+    echo "==> Integration tests (INTEG_STAGE=beta)"
+    INTEG_STAGE=beta $PYTHON -m pytest tests/integration/ -v --override-ini="addopts=" --tb=short
+else
+    echo "==> Integration tests skipped (no AWS credentials)"
+fi

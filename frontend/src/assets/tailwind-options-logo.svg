@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 44">
+  <rect x="0" y="2" width="40" height="40" rx="10" fill="#00b89c"/>
+  <rect x="8" y="24" width="7" height="11" rx="2" fill="rgba(255,255,255,0.32)"/>
+  <rect x="17" y="17" width="7" height="18" rx="2" fill="rgba(255,255,255,0.62)"/>
+  <rect x="26" y="9" width="7" height="26" rx="2" fill="#ffffff"/>
+  <text x="52" y="17"
+    font-family="system-ui,-apple-system,sans-serif"
+    font-size="10" font-weight="600" letter-spacing="3" fill="#00997f">TAILWIND</text>
+  <text x="50" y="38"
+    font-family="system-ui,-apple-system,sans-serif"
+    font-size="24" font-weight="800" letter-spacing="-1" fill="#0a1f1c">Options</text>
+</svg>

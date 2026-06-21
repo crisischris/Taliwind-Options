@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SEO: sitemap submitted to Google Search Console to aid crawl discovery and
+  signal update frequency. The site uses hash-based routing (#puts, #calls,
+  #about), so all routes resolve to the same origin URL from Google's
+  perspective — hash fragments are not indexed as separate pages.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tailwindoptions.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

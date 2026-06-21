@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background:   167 44% 96%;    /* #f2faf8 faint teal tint */
+    --foreground:   171 51% 8%;     /* #0a1f1c dark teal ink */
+    --card:         0 0% 100%;
+    --card-foreground: 171 51% 8%;
+    --popover:      0 0% 100%;
+    --popover-foreground: 171 51% 8%;
+    --border:       171 30% 87%;
+    --input:        171 30% 87%;
+    --ring:         171 100% 36%;   /* #00b89c teal accent */
+    --primary:      171 100% 36%;   /* #00b89c teal accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary:    171 40% 93%;    /* light teal for active states */
+    --secondary-foreground: 171 51% 16%;
+    --muted:        171 30% 94%;
+    --muted-foreground: 171 15% 46%;
+    --accent:       171 40% 93%;
+    --accent-foreground: 171 51% 16%;
+    --destructive:  0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --radius: 0.5rem;
+
+    /* scanner signal colors */
+    --gain:    142 71% 35%;
+    --loss:    0 84% 50%;
+    --caution: 35 90% 45%;          /* amber, slightly darkened for light bg legibility */
+    --gold:    35 90% 45%;
+  }
+
+  .dark {
+    --background:   222 20% 10%;    /* neutral dark charcoal, slight blue */
+    --foreground:   210 15% 92%;    /* near-white, cool neutral */
+    --card:         222 18% 15%;    /* slightly lighter charcoal card */
+    --card-foreground: 210 15% 92%;
+    --popover:      222 18% 15%;
+    --popover-foreground: 210 15% 92%;
+    --border:       222 15% 23%;
+    --input:        222 15% 23%;
+    --ring:         171 100% 36%;   /* #00b89c teal accent */
+    --primary:      171 100% 36%;   /* #00b89c teal accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary:    222 18% 20%;
+    --secondary-foreground: 210 15% 92%;
+    --muted:        222 18% 20%;
+    --muted-foreground: 215 15% 62%;
+    --accent:       222 18% 20%;
+    --accent-foreground: 210 15% 92%;
+    --destructive:  0 63% 55%;
+    --destructive-foreground: 210 15% 92%;
+
+    /* scanner signal colors — brighter in dark mode */
+    --gain:    142 71% 45%;
+    --loss:    0 84% 60%;
+    --caution: 35 100% 64%;         /* #ffb347 exactly */
+    --gold:    35 100% 64%;         /* #ffb347 exactly */
+  }
+}
+
+@layer base {
+  * { border-color: hsl(var(--border)); }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+@keyframes hero-flash {
+  0%, 100% { background-color: hsl(var(--gold) / 0.1); }
+  50%       { background-color: hsl(var(--gold) / 0.3); }
+}
+.hero-flash { animation: hero-flash 0.7s ease 3; }
+
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

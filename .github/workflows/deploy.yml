@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install CDK infra deps
+        run: pip install -r infra/requirements.txt
+
+      - name: Build frontend
+        env:
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+        run: |
+          cd frontend
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # ── Beta ────────────────────────────────────────────────────────────────
+
+      - name: Deploy beta
+        env:
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          ALERT_PHONE: ${{ secrets.ALERT_PHONE }}
+        run: cdk deploy -c stage=beta --require-approval never --ci
+
+      - name: Integration tests
+        timeout-minutes: 15
+        env:
+          INTEG_STAGE: beta
+        run: |
+          pip install -e . boto3 pytest
+          pytest tests/integration/ -v --override-ini="addopts=" --tb=short
+
+      # ── Prod ────────────────────────────────────────────────────────────────
+
+      - name: Deploy prod
+        env:
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          ALERT_PHONE: ${{ secrets.ALERT_PHONE }}
+        run: cdk deploy -c stage=prod --require-approval never --ci
