@@ -79,7 +79,7 @@ class TailwindOptionsStack(cdk.Stack):
                     ],
                 ),
             ),
-            timeout=cdk.Duration.minutes(10),
+            timeout=cdk.Duration.minutes(15),
             memory_size=1024,
             environment={
                 "STAGE": config.stage,
@@ -254,9 +254,9 @@ class TailwindOptionsStack(cdk.Stack):
             cloudwatch.Alarm(
                 self, "LambdaDurationAlarm",
                 alarm_name="tailwind-options-lambda-duration",
-                alarm_description="Lambda scanner avg duration > 8 min (timeout is 10 min)",
+                alarm_description="Lambda scanner avg duration > 12 min (timeout is 15 min)",
                 metric=scanner_fn.metric_duration(period=cdk.Duration.minutes(5), statistic="Average"),
-                threshold=480_000,  # 8 minutes in milliseconds
+                threshold=720_000,  # 12 minutes in milliseconds
                 evaluation_periods=1,
                 comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
                 treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
@@ -21,6 +23,13 @@ from ._helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Wide DTE windows can mean a dozen+ expiries per ticker. Fetch them concurrently
+# (I/O-bound) and bound the wait per expiry so one slow/hung request to Yahoo
+# Finance can't quietly burn minutes of the Lambda's fixed budget.
+_CHAIN_FETCH_WORKERS = 8
+_CHAIN_FETCH_TIMEOUT_S = 20
+_CHAIN_FETCH_RETRIES = 1
 
 
 @dataclass
@@ -98,17 +107,13 @@ class BaseOptionScanner(Indicator, ABC):
         title_prefix = "Call Opportunity" if option_type == "calls" else "Put Opportunity"
         theme_fields = self._theme_fields(ticker, meta)
 
+        chains = self._fetch_chains(ticker, option_type, expirations)
+
         candidates: list[dict] = []
         for expiry in expirations:
-            chain_key = f"{option_type}_{ticker}_{expiry}"
-            chain = cache.get(chain_key)
+            chain = chains.get(expiry)
             if chain is None:
-                try:
-                    chain = getattr(t.option_chain(expiry), option_type)
-                    cache.set(chain_key, chain)
-                except Exception as e:
-                    logger.error("%s: failed to fetch %s for %s: %s", ticker, option_type, expiry, e)
-                    continue
+                continue
 
             for _, row in filter_option_chain(chain, current_price, params.min_oi, params.max_cost_pct, params.max_iv).iterrows():
                 ask = row["effective_ask"]
@@ -150,3 +155,47 @@ class BaseOptionScanner(Indicator, ABC):
             )
             for c in bucket_candidates(candidates)
         ]
+
+    def _fetch_chains(
+        self, ticker: str, option_type: str, expirations: list[str]
+    ) -> dict[str, Any]:
+        """Fetch one option chain per expiry concurrently, bounded per-request."""
+        with ThreadPoolExecutor(max_workers=_CHAIN_FETCH_WORKERS) as pool:
+            futures = {
+                expiry: pool.submit(self._fetch_one_chain, ticker, option_type, expiry)
+                for expiry in expirations
+            }
+            chains: dict[str, Any] = {}
+            for expiry, future in futures.items():
+                try:
+                    chains[expiry] = future.result(timeout=_CHAIN_FETCH_TIMEOUT_S)
+                except FutureTimeoutError:
+                    logger.error(
+                        "%s: timed out fetching %s for %s after %ds",
+                        ticker, option_type, expiry, _CHAIN_FETCH_TIMEOUT_S,
+                    )
+                    chains[expiry] = None
+        return chains
+
+    def _fetch_one_chain(self, ticker: str, option_type: str, expiry: str) -> Any | None:
+        chain_key = f"{option_type}_{ticker}_{expiry}"
+        cached = cache.get(chain_key)
+        if cached is not None:
+            return cached
+
+        # A fresh Ticker per call — yf.Ticker keeps mutable per-instance state
+        # (_expirations, _underlying) that isn't safe to share across the
+        # concurrent fetches in _fetch_chains.
+        for attempt in range(_CHAIN_FETCH_RETRIES + 1):
+            try:
+                chain = getattr(yf.Ticker(ticker).option_chain(expiry), option_type)
+                cache.set(chain_key, chain)
+                return chain
+            except Exception as e:
+                if attempt < _CHAIN_FETCH_RETRIES:
+                    logger.warning(
+                        "%s: retrying %s for %s after error: %s", ticker, option_type, expiry, e
+                    )
+                    continue
+                logger.error("%s: failed to fetch %s for %s: %s", ticker, option_type, expiry, e)
+                return None

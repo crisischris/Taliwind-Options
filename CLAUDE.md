@@ -44,7 +44,9 @@ cd frontend && npx prettier --write .
 
 ## Architecture
 
-This is a Lambda-based scanner that runs daily at 9:31 AM ET (prod only), finds S&P 500 / NASDAQ 100 tickers with extreme YTD gains, surfaces cheap OTM puts on those tickers, and writes a JSON report to S3. A React static site reads those reports.
+This is a Lambda-based scanner that runs twice daily on trading days (prod only) — an "open scan" and a "midday scan", both defined in `frontend/src/config/scanSchedule.json` and wired up as separate EventBridge schedules in `infra/tailwind_options_stack.py` (`OpenScanSchedule`, `MidayScanSchedule`) — finds S&P 500 / NASDAQ 100 tickers with extreme YTD gains, surfaces cheap OTM puts on those tickers, and writes a JSON report to S3. A React static site reads those reports.
+
+The open scan runs shortly after the 9:30 AM ET bell, when Yahoo Finance's option-chain endpoint is under the heaviest load; that run is consistently slower than the midday scan and has the least timeout margin.
 
 **Entry point — `lambda_handler.py`**
 AWS Lambda handler. Runs the scanner, writes JSON report + manifest to S3. Uses `context.aws_request_id` prefixed on every log line for CloudWatch querying.
@@ -70,7 +72,7 @@ AWS Lambda handler. Runs the scanner, writes JSON report + manifest to S3. Uses 
 
 **Infrastructure (`infra/`)**
 - `stage_config.py` — `StageConfig` dataclass, single source of truth for per-stage naming
-- CDK stack: Lambda (Python 3.12), EventBridge Scheduler (prod only, 9:31 AM ET), S3 static site
+- CDK stack: Lambda (Python 3.12, 15 min timeout), two EventBridge Schedules (prod only — open scan ~9:35 AM ET, midday scan 12:00 PM ET, both configured in `frontend/src/config/scanSchedule.json`), S3 static site
 - Deploy with: `cdk deploy -c stage=beta` or `cdk deploy -c stage=prod`
 - CI/CD: GitHub Actions pipeline — beta deploy → integration tests → prod deploy on push to `main`
 

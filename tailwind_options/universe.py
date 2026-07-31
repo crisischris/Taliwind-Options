@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from io import StringIO
 
 import httpx
@@ -11,6 +12,11 @@ from . import cache
 logger = logging.getLogger(__name__)
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; tailwind-options-bot/1.0)"}
+
+# US common-stock tickers: letters only, with an optional single-letter share-class
+# suffix (e.g. BRK-B). Rejects foreign listings pulled in by Wikipedia table drift
+# (e.g. 005930-KS, 6383-T, ABBN-SW) that Yahoo Finance 404s on every run.
+_US_TICKER_RE = re.compile(r"^[A-Z]+(-[A-Z])?$")
 
 
 def _read_html(url: str) -> list:
@@ -49,7 +55,10 @@ def get_universe() -> list[str]:
     except Exception as e:
         logger.error("Failed to fetch NASDAQ 100 universe: %s", e)
 
-    result = list(dict.fromkeys(tickers))
+    deduped = list(dict.fromkeys(tickers))
+    result = [t for t in deduped if _US_TICKER_RE.fullmatch(t)]
+    if len(result) < len(deduped):
+        logger.info("Dropped %d non-US-listed ticker(s)", len(deduped) - len(result))
     cache.set("universe", result)
     # Merge Wikipedia names on top of any ETF names already in cache (ETF names are the floor)
     existing = cache.get("company_names") or {}
