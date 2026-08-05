@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeoutError
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
@@ -159,22 +158,34 @@ class BaseOptionScanner(Indicator, ABC):
     def _fetch_chains(
         self, ticker: str, option_type: str, expirations: list[str]
     ) -> dict[str, Any]:
-        """Fetch one option chain per expiry concurrently, bounded per-request."""
-        with ThreadPoolExecutor(max_workers=_CHAIN_FETCH_WORKERS) as pool:
-            futures = {
-                expiry: pool.submit(self._fetch_one_chain, ticker, option_type, expiry)
-                for expiry in expirations
-            }
-            chains: dict[str, Any] = {}
-            for expiry, future in futures.items():
-                try:
-                    chains[expiry] = future.result(timeout=_CHAIN_FETCH_TIMEOUT_S)
-                except FutureTimeoutError:
-                    logger.error(
-                        "%s: timed out fetching %s for %s after %ds",
-                        ticker, option_type, expiry, _CHAIN_FETCH_TIMEOUT_S,
-                    )
-                    chains[expiry] = None
+        """Fetch one option chain per expiry concurrently, bounded to one
+        _CHAIN_FETCH_TIMEOUT_S wait for the whole batch.
+
+        Uses wait() + shutdown(wait=False) rather than the executor as a context
+        manager: __exit__ calls shutdown(wait=True), which blocks until every
+        submitted thread actually finishes — a still-running request doesn't stop
+        just because we stopped waiting on its future, so that would silently
+        reintroduce the unbounded hang this method exists to prevent.
+        """
+        pool = ThreadPoolExecutor(max_workers=_CHAIN_FETCH_WORKERS)
+        futures = {
+            pool.submit(self._fetch_one_chain, ticker, option_type, expiry): expiry
+            for expiry in expirations
+        }
+        done, not_done = wait(futures, timeout=_CHAIN_FETCH_TIMEOUT_S)
+
+        chains: dict[str, Any] = {}
+        for future in done:
+            chains[futures[future]] = future.result()
+        for future in not_done:
+            expiry = futures[future]
+            logger.error(
+                "%s: timed out fetching %s for %s after %ds",
+                ticker, option_type, expiry, _CHAIN_FETCH_TIMEOUT_S,
+            )
+            chains[expiry] = None
+
+        pool.shutdown(wait=False, cancel_futures=True)
         return chains
 
     def _fetch_one_chain(self, ticker: str, option_type: str, expiry: str) -> Any | None:

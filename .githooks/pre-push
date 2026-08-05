@@ -3,7 +3,7 @@ set -e
 
 cd "$(git rev-parse --show-toplevel)"
 
-PYTHON=/Users/chrisnelson/miniconda3/envs/indicators/bin/python
+PYTHON="${PYTHON:-python3}"
 
 echo "==> Unit tests"
 $PYTHON -m pytest tests/ --tb=short -q
