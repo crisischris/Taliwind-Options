@@ -73,6 +73,7 @@ AWS Lambda handler. Runs the scanner, writes JSON report + manifest to S3. Uses 
 **Infrastructure (`infra/`)**
 - `stage_config.py` — `StageConfig` dataclass, single source of truth for per-stage naming
 - CDK stack: Lambda (Python 3.12, 15 min timeout), two EventBridge Schedules (prod only — open scan ~9:35 AM ET, midday scan 12:00 PM ET, both configured in `frontend/src/config/scanSchedule.json`), S3 static site
+- `tailwind-options-missed-scan` CloudWatch alarm (no invocations in 13h) is muted Fri 1 PM ET → Mon 12:05 AM ET via three EventBridge Schedules, since the scanner only runs MON-FRI and the weekend gap always exceeds 13h. The Monday unmute also force-resets alarm state to OK so a genuine Monday failure still pages.
 - Deploy with: `cdk deploy -c stage=beta` or `cdk deploy -c stage=prod`
 - CI/CD: GitHub Actions pipeline — beta deploy → integration tests → prod deploy on push to `main`
 

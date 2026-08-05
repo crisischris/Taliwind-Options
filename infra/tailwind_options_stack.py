@@ -262,7 +262,7 @@ class TailwindOptionsStack(cdk.Stack):
                 treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
             ).add_alarm_action(alarm_action)
 
-            cloudwatch.Alarm(
+            missed_scan_alarm = cloudwatch.Alarm(
                 self, "MissedScanAlarm",
                 alarm_name="tailwind-options-missed-scan",
                 alarm_description="Scanner did not run — no invocations in 13 hours",
@@ -271,7 +271,84 @@ class TailwindOptionsStack(cdk.Stack):
                 evaluation_periods=1,
                 comparison_operator=cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
                 treat_missing_data=cloudwatch.TreatMissingData.BREACHING,
-            ).add_alarm_action(alarm_action)
+            )
+            missed_scan_alarm.add_alarm_action(alarm_action)
+
+            # The scanner only runs MON-FRI (see OpenScanSchedule / MidayScanSchedule
+            # above), so the ~45-70h gap between Friday's midday scan and Monday's open
+            # scan always exceeds the alarm's 13-hour window and would otherwise page
+            # every weekend for a non-issue. Mute the alarm's actions shortly after
+            # Friday's last scan and restore them early Monday, forcing a state reset
+            # so a genuine Monday failure still re-triggers ALARM (and pages) once the
+            # next scheduled evaluation runs.
+            if config.enable_scheduler:
+                scheduler_role.add_to_policy(
+                    iam.PolicyStatement(
+                        actions=[
+                            "cloudwatch:DisableAlarmActions",
+                            "cloudwatch:EnableAlarmActions",
+                            "cloudwatch:SetAlarmState",
+                        ],
+                        resources=[missed_scan_alarm.alarm_arn],
+                    )
+                )
+
+                scheduler.CfnSchedule(
+                    self,
+                    "MuteMissedScanAlarmSchedule",
+                    description="Suppress missed-scan paging over the weekend market close",
+                    schedule_expression="cron(0 13 ? * FRI *)",
+                    schedule_expression_timezone="America/New_York",
+                    flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                        mode="OFF",
+                    ),
+                    target=scheduler.CfnSchedule.TargetProperty(
+                        arn="arn:aws:scheduler:::aws-sdk:cloudwatch:disableAlarmActions",
+                        role_arn=scheduler_role.role_arn,
+                        input=json.dumps({"AlarmNames": [missed_scan_alarm.alarm_name]}),
+                    ),
+                )
+
+                scheduler.CfnSchedule(
+                    self,
+                    "UnmuteMissedScanAlarmSchedule",
+                    description="Restore missed-scan paging ahead of the trading week",
+                    schedule_expression="cron(5 0 ? * MON *)",
+                    schedule_expression_timezone="America/New_York",
+                    flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                        mode="OFF",
+                    ),
+                    target=scheduler.CfnSchedule.TargetProperty(
+                        arn="arn:aws:scheduler:::aws-sdk:cloudwatch:enableAlarmActions",
+                        role_arn=scheduler_role.role_arn,
+                        input=json.dumps({"AlarmNames": [missed_scan_alarm.alarm_name]}),
+                    ),
+                )
+
+                scheduler.CfnSchedule(
+                    self,
+                    "ResetMissedScanAlarmSchedule",
+                    description=(
+                        "Clear any stale ALARM state left over from the weekend mute so "
+                        "a real Monday failure produces a fresh OK->ALARM transition"
+                    ),
+                    schedule_expression="cron(5 0 ? * MON *)",
+                    schedule_expression_timezone="America/New_York",
+                    flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
+                        mode="OFF",
+                    ),
+                    target=scheduler.CfnSchedule.TargetProperty(
+                        arn="arn:aws:scheduler:::aws-sdk:cloudwatch:setAlarmState",
+                        role_arn=scheduler_role.role_arn,
+                        input=json.dumps(
+                            {
+                                "AlarmName": missed_scan_alarm.alarm_name,
+                                "StateValue": "OK",
+                                "StateReason": "Reset after scheduled weekend mute",
+                            }
+                        ),
+                    ),
+                )
 
             if distribution:
                 cloudwatch.Alarm(
