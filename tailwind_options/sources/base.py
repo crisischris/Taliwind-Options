@@ -15,8 +15,11 @@ from ..constants import BREAKEVEN_DROP, BREAKEVEN_RISE
 from ._helpers import (
     TERM_BOUNDARY_DAYS,
     bucket_candidates,
+    expected_payoff_call,
+    expected_payoff_put,
     filter_option_chain,
     format_option_message,
+    liquidity_factor,
     prob_itm_call,
     prob_itm_put,
 )
@@ -103,6 +106,7 @@ class BaseOptionScanner(Indicator, ABC):
             return []
 
         prob_fn = prob_itm_call if option_type == "calls" else prob_itm_put
+        payoff_fn = expected_payoff_call if option_type == "calls" else expected_payoff_put
         title_prefix = "Call Opportunity" if option_type == "calls" else "Put Opportunity"
         theme_fields = self._theme_fields(ticker, meta)
 
@@ -120,6 +124,10 @@ class BaseOptionScanner(Indicator, ABC):
                 iv = row["impliedVolatility"]
                 prob_itm = prob_fn(current_price, row["strike"], dte / 365.0, iv)
                 return_multiple = row["strike"] / ask
+                ev_multiple = payoff_fn(current_price, row["strike"], dte / 365.0, iv) / ask
+                liquidity = liquidity_factor(
+                    row["bid"], ask, row["openInterest"], row.get("volume")
+                )
                 if option_type == "calls":
                     breakeven = {BREAKEVEN_RISE: (row["strike"] + ask - current_price) / current_price * 100}
                 else:
@@ -137,8 +145,15 @@ class BaseOptionScanner(Indicator, ABC):
                     "contract": row["contractSymbol"],
                     **breakeven,
                     "return_multiple": return_multiple,
+                    "ev_multiple": ev_multiple,
+                    "liquidity": liquidity,
                     "prob_itm": prob_itm,
-                    "score": return_multiple * prob_itm,
+                    # ev_multiple already integrates probability across the whole payoff
+                    # distribution, but re-multiplying by prob_itm is a deliberate
+                    # risk-aversion dampener: without it, a 0.5%-probability contract
+                    # with a huge payoff can outrank a 20%-probability one with similar
+                    # EV, which isn't a trade most people actually want ranked #1.
+                    "score": ev_multiple * prob_itm * liquidity,
                     "dte": dte,
                     "term": "short" if dte < TERM_BOUNDARY_DAYS else "long",
                     **theme_fields,

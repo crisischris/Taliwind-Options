@@ -22,7 +22,7 @@ const JC_INTRO = 'These are the rules baked into the scanner. Each one is a deli
 const JC_OTM_PUTS:   JudgementCall = { rule: 'Out-of-the-money puts only',  detail: 'We want downside optionality, not intrinsic value. ITM puts are excluded.' }
 const JC_OTM_CALLS:  JudgementCall = { rule: 'Out-of-the-money calls only', detail: 'We want continuation optionality, not intrinsic value. ITM calls are excluded.' }
 const JC_LIQUIDITY:  JudgementCall = { rule: 'Minimum liquidity',           detail: 'Open interest ≥ 10, or any volume traded today, or a recorded last price.' }
-const JC_SCORING:    JudgementCall = { rule: 'Scored by return × prob ITM', detail: 'Options are ranked by return multiple (strike ÷ ask) multiplied by Black-Scholes probability of expiring in-the-money. This balances raw upside against realistic odds.' }
+const JC_SCORING:    JudgementCall = { rule: 'Scored by expected value × prob ITM × liquidity', detail: 'Options are ranked by risk-neutral expected payoff (Black-Scholes, integrated across the full payoff distribution — not just strike ÷ ask) divided by ask, multiplied by probability of expiring in-the-money and a 0–1 liquidity factor that penalizes wide spreads and thin open interest on a gradient. This balances raw upside against realistic odds and how tradeable the contract actually is.' }
 const JC_TOP_10:     JudgementCall = { rule: 'Top 10 per bucket',           detail: 'Short-dated (< 6 months) and long-dated / LEAPs (6+ months) are capped at 10 each, sorted by score. Moonshots — the top 5 by raw return multiple — are surfaced separately.' }
 
 export const THEMES: ThemeDefinition[] = [

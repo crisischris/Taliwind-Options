@@ -209,6 +209,8 @@ def _option_to_dict(s: Signal, is_put: bool, with_context: bool = False) -> dict
         "volume": vol,
         breakeven_key: r[breakeven_key],
         "return_multiple": r["return_multiple"],
+        "ev_multiple": r.get("ev_multiple", 0.0),
+        "liquidity": r.get("liquidity", 0.0),
         "prob_itm": r.get("prob_itm", 0.0),
         "score": r.get("score", 0.0),
     }

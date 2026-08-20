@@ -79,7 +79,7 @@ export default function ThemeFiltersSheet({ base, themeId }: Props) {
               <EditableRule rule="Minimum open interest" detail="Higher = more liquid contracts only.">
                 <NumberInput value={filters.minOi} onChange={v => set('minOi', v)} min={0} max={500} />
               </EditableRule>
-              <FixedRule rule="Scored by return × prob ITM" detail={`${isPuts ? 'Puts' : 'Calls'} are ranked by return multiple multiplied by Black-Scholes probability of expiring ITM.`} />
+              <FixedRule rule="Scored by expected value × prob ITM × liquidity" detail={`${isPuts ? 'Puts' : 'Calls'} are ranked by risk-neutral expected payoff divided by ask, multiplied by Black-Scholes probability of expiring ITM and a liquidity factor that penalizes wide spreads and thin open interest.`} />
               <EditableRule rule="Results per bucket" detail={`Maximum ${isPuts ? 'puts' : 'calls'} shown per term bucket (short, long, moonshot).`}>
                 <NumberInput value={filters.topN} onChange={v => set('topN', v)} min={3} max={50} />
               </EditableRule>

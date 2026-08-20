@@ -12,10 +12,13 @@ from tailwind_options.sources._helpers import (
     RISK_FREE_RATE,
     TERM_BOUNDARY_DAYS,
     bucket_candidates,
+    expected_payoff_call,
+    expected_payoff_put,
     fetch_price,
     filter_by_momentum,
     filter_option_chain,
     format_option_message,
+    liquidity_factor,
     norm_cdf,
     prob_itm_call,
     prob_itm_put,
@@ -148,6 +151,102 @@ def test_prob_itm_put_higher_when_deeper_itm():
 
 def test_prob_itm_put_negative_T_returns_zero():
     assert prob_itm_put(S=200, K=150, T=-1, sigma=0.8) == 0.0
+
+
+# ── expected_payoff_call ──────────────────────────────────────────────────────
+
+def test_expected_payoff_call_nonnegative():
+    assert expected_payoff_call(S=200, K=250, T=0.5, sigma=0.6) >= 0.0
+
+
+def test_expected_payoff_call_zero_when_T_is_zero():
+    assert expected_payoff_call(S=200, K=250, T=0, sigma=0.6) == 0.0
+
+
+def test_expected_payoff_call_zero_when_sigma_is_zero():
+    assert expected_payoff_call(S=200, K=250, T=0.5, sigma=0) == 0.0
+
+
+def test_expected_payoff_call_zero_when_S_is_zero():
+    assert expected_payoff_call(S=0, K=250, T=0.5, sigma=0.6) == 0.0
+
+
+def test_expected_payoff_call_zero_when_K_is_zero():
+    assert expected_payoff_call(S=200, K=0, T=0.5, sigma=0.6) == 0.0
+
+
+def test_expected_payoff_call_higher_when_closer_to_atm():
+    ev_far = expected_payoff_call(S=100, K=200, T=1.0, sigma=0.5)
+    ev_near = expected_payoff_call(S=100, K=110, T=1.0, sigma=0.5)
+    assert ev_near > ev_far
+
+
+def test_expected_payoff_call_distinguishes_tail_payoff_from_prob_itm():
+    # Same prob_itm-adjacent setup, but a wider strike means a much larger
+    # payoff *if* it lands ITM — expected_payoff should reflect that even
+    # though both are low-probability.
+    ev_moderate = expected_payoff_call(S=100, K=150, T=1.0, sigma=0.9)
+    ev_moonshot = expected_payoff_call(S=100, K=400, T=1.0, sigma=0.9)
+    assert ev_moderate > 0.0
+    assert ev_moonshot >= 0.0
+
+
+# ── expected_payoff_put ───────────────────────────────────────────────────────
+
+def test_expected_payoff_put_nonnegative():
+    assert expected_payoff_put(S=200, K=150, T=0.5, sigma=0.8) >= 0.0
+
+
+def test_expected_payoff_put_zero_when_T_is_zero():
+    assert expected_payoff_put(S=200, K=150, T=0, sigma=0.8) == 0.0
+
+
+def test_expected_payoff_put_zero_when_sigma_is_zero():
+    assert expected_payoff_put(S=200, K=150, T=0.5, sigma=0) == 0.0
+
+
+def test_expected_payoff_put_zero_when_S_is_zero():
+    assert expected_payoff_put(S=0, K=150, T=0.5, sigma=0.8) == 0.0
+
+
+def test_expected_payoff_put_zero_when_K_is_zero():
+    assert expected_payoff_put(S=200, K=0, T=0.5, sigma=0.8) == 0.0
+
+
+def test_expected_payoff_put_higher_when_deeper_itm():
+    ev_atm = expected_payoff_put(S=100, K=100, T=1.0, sigma=0.5)
+    ev_otm = expected_payoff_put(S=100, K=50, T=1.0, sigma=0.5)
+    assert ev_atm > ev_otm
+
+
+# ── liquidity_factor ──────────────────────────────────────────────────────────
+
+def test_liquidity_factor_between_0_and_1():
+    assert 0.0 <= liquidity_factor(bid=1.8, ask=2.2, open_interest=50, volume=10) <= 1.0
+
+
+def test_liquidity_factor_zero_when_mid_is_zero():
+    assert liquidity_factor(bid=0.0, ask=0.0, open_interest=50, volume=10) == 0.0
+
+
+def test_liquidity_factor_penalizes_wide_spread():
+    tight = liquidity_factor(bid=1.95, ask=2.05, open_interest=50, volume=10)
+    wide = liquidity_factor(bid=1.0, ask=3.0, open_interest=50, volume=10)
+    assert tight > wide
+
+
+def test_liquidity_factor_zero_when_spread_extreme():
+    assert liquidity_factor(bid=0.1, ask=2.0, open_interest=50, volume=10) == 0.0
+
+
+def test_liquidity_factor_rewards_depth():
+    thin = liquidity_factor(bid=1.9, ask=2.1, open_interest=1, volume=0)
+    deep = liquidity_factor(bid=1.9, ask=2.1, open_interest=2000, volume=500)
+    assert deep > thin
+
+
+def test_liquidity_factor_handles_none_volume():
+    assert liquidity_factor(bid=1.9, ask=2.1, open_interest=50, volume=None) >= 0.0
 
 
 # ── fetch_price ───────────────────────────────────────────────────────────────

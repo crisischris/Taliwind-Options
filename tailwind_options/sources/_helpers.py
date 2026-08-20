@@ -38,6 +38,46 @@ def prob_itm_put(S: float, K: float, T: float, sigma: float) -> float:
     return norm_cdf(-d2)
 
 
+def expected_payoff_call(S: float, K: float, T: float, sigma: float) -> float:
+    """Risk-neutral expected payoff of a call at expiry (undiscounted), i.e. the
+    Black-Scholes pricing formula's forward value. Unlike prob_itm_call (which only
+    reports N(d2), the probability of finishing ITM at all) this weighs the full
+    payoff distribution, so a low-probability/high-payoff contract is distinguished
+    from a low-probability/barely-ITM one."""
+    if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = (math.log(S / K) + (RISK_FREE_RATE + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
+    d2 = d1 - sigma * math.sqrt(T)
+    return S * math.exp(RISK_FREE_RATE * T) * norm_cdf(d1) - K * norm_cdf(d2)
+
+
+def expected_payoff_put(S: float, K: float, T: float, sigma: float) -> float:
+    """Risk-neutral expected payoff of a put at expiry (undiscounted). See
+    expected_payoff_call for why this differs from prob_itm_put."""
+    if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = (math.log(S / K) + (RISK_FREE_RATE + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
+    d2 = d1 - sigma * math.sqrt(T)
+    return K * norm_cdf(-d2) - S * math.exp(RISK_FREE_RATE * T) * norm_cdf(-d1)
+
+
+def liquidity_factor(bid: float, ask: float, open_interest: int, volume: float | None) -> float:
+    """Continuous 0-1 tradeability score. filter_option_chain only pass/fail-gates
+    on min_oi, so a contract that barely clears the floor with a wide spread scores
+    identically to a deep, tight market — this penalizes both spread and thin
+    depth on a gradient instead."""
+    mid = (bid + ask) / 2
+    if mid <= 0:
+        return 0.0
+    spread_pct = (ask - bid) / mid
+    spread_score = max(0.0, 1.0 - spread_pct / 0.5)  # 0 once spread hits 50% of mid
+
+    depth = open_interest + (volume or 0)
+    depth_score = min(1.0, math.log10(depth + 1) / 3)  # saturates around 1000 contracts
+
+    return spread_score * depth_score
+
+
 def fetch_price(ticker: str) -> float | None:
     """Return the current price for ticker, using the in-process cache."""
     key = f"price_{ticker}"

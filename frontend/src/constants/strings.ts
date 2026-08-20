@@ -19,7 +19,7 @@ export const TICKER_CARD = {
 } as const
 
 const SHARED_OPTION_COLUMNS = [
-  { key: 'return_multiple', label: 'Return',        tip: 'Strike price divided by ask price. Options are ranked by Return x Prob ITM combined.' },
+  { key: 'return_multiple', label: 'Return',        tip: 'Strike price divided by ask price. Options are ranked by expected value x Prob ITM x liquidity combined.' },
   { key: 'prob_itm',        label: 'Prob ITM',      tip: 'Black-Scholes risk-neutral probability this option expires in-the-money.' },
   { key: 'expiry',          label: 'Expiry',        tip: 'Option expiration date.' },
   { key: 'strike',          label: 'Strike',        tip: 'The price the stock must reach for this option to have intrinsic value at expiry.' },
@@ -118,11 +118,11 @@ export const PAGE_META = {
   },
   puts: {
     title:       'Put Report | Tailwind Options',
-    description: 'Cheap out-of-the-money puts on S&P 500 and NASDAQ 100 stocks up 500%+ over the past year. Scored by return multiple × probability ITM.',
+    description: 'Cheap out-of-the-money puts on S&P 500 and NASDAQ 100 stocks up 500%+ over the past year. Ranked by expected value, probability ITM, liquidity.',
   },
   calls: {
     title:       'Call Report | Tailwind Options',
-    description: 'Cheap out-of-the-money calls on momentum names held across ARKK, SMH, AIQ, BOTZ, and other thematic ETFs. Scored by return multiple × probability ITM.',
+    description: 'Cheap out-of-the-money calls on momentum names held across ARKK, SMH, AIQ, BOTZ, and other thematic ETFs. Ranked by expected value, probability ITM, liquidity.',
   },
   about: {
     title:       'About | Tailwind Options',
