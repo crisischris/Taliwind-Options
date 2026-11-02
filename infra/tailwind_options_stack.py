@@ -278,9 +278,11 @@ class TailwindOptionsStack(cdk.Stack):
             # above), so the ~45-70h gap between Friday's midday scan and Monday's open
             # scan always exceeds the alarm's 13-hour window and would otherwise page
             # every weekend for a non-issue. Mute the alarm's actions shortly after
-            # Friday's last scan and restore them early Monday, forcing a state reset
-            # so a genuine Monday failure still re-triggers ALARM (and pages) once the
-            # next scheduled evaluation runs.
+            # Friday's last scan and restore them only after Monday's open scan (9:35 AM
+            # ET, so this must stay later than openScanEt): the alarm re-evaluates within
+            # a minute of the reset, so restoring before that scan pages on the weekend
+            # gap. The forced state reset means a genuine Monday failure still
+            # re-triggers ALARM and pages.
             if config.enable_scheduler:
                 scheduler_role.add_to_policy(
                     iam.PolicyStatement(
@@ -312,8 +314,8 @@ class TailwindOptionsStack(cdk.Stack):
                 scheduler.CfnSchedule(
                     self,
                     "UnmuteMissedScanAlarmSchedule",
-                    description="Restore missed-scan paging ahead of the trading week",
-                    schedule_expression="cron(5 0 ? * MON *)",
+                    description="Restore missed-scan paging after Monday's open scan",
+                    schedule_expression="cron(0 10 ? * MON *)",
                     schedule_expression_timezone="America/New_York",
                     flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
                         mode="OFF",
@@ -332,7 +334,7 @@ class TailwindOptionsStack(cdk.Stack):
                         "Clear any stale ALARM state left over from the weekend mute so "
                         "a real Monday failure produces a fresh OK->ALARM transition"
                     ),
-                    schedule_expression="cron(5 0 ? * MON *)",
+                    schedule_expression="cron(0 10 ? * MON *)",
                     schedule_expression_timezone="America/New_York",
                     flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(
                         mode="OFF",
